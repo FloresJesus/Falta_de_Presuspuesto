@@ -1,0 +1,21 @@
+# Dependencias
+node_modules/
+
+# Variables de entorno y secretos
+.env
+.env.*
+!.env.example
+
+# Expo / build
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Logs
+*.log
+npm-debug.*
+
+# Sistema
+.DS_Store
+Thumbs.db
