@@ -1,56 +1,73 @@
-# Welcome to your Expo app 👋
+# LÍA — Acompañamiento en seguridad personal
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Frontend móvil y web de **LÍA / MASI**, una red de apoyo para mujeres en Bolivia. Construido con Expo SDK 58 + Expo Router, conectado directamente al proyecto de Supabase con los datos iniciales (categorías, contenidos, cuestionario e instituciones).
 
-## Get started
+## Paleta de marca
 
-1. Install dependencies
+| Color | Código | Uso |
+| --- | --- | --- |
+| Primary | `#55147C` | Marca, botones, acentos y superficies destacadas |
+| Secondary | `#22147C` | Texto principal, superficies oscuras y contraste |
+| Third | `#FAF9FF` | Fondo general de la app |
+| Derivados claros | `#EFE7F8` / `#E7D8F2` / `#F0EAF9` | Superficies suaves, bordes y fondos de elementos |
+| Éxito / peligro / advertencia | `#0E9F66` / `#E5484D` / `#C77400` | Estados funcionales |
 
-   ```bash
-   npm install
-   ```
+## Stack
 
-2. Start the app
+- Expo 58, React 19, React Native 0.88, Expo Router (file-based routing)
+- `@supabase/supabase-js` con persistencia de sesión en AsyncStorage
+- `expo-location`, `expo-haptics`, `expo-linking`, `@expo/vector-icons`, `react-native-svg`
+- TypeScript estricto + ESLint (Expo config)
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Inicio rápido
 
 ```bash
-npm run reset-project
+cd frontend
+npm install
+npx expo start
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+Para abrir en plataformas específicas: `npx expo start --android`, `npx expo start --ios`, `npx expo start --web`.
 
-### Other setup steps
+### Verificación
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+```bash
+npx tsc --noEmit     # typecheck
+npx expo lint        # lint
+npx expo export --platform web   # build web estático (SPA)
+```
 
-## Learn more
+## Estructura
 
-To learn more about developing your project with Expo, look at the following resources:
+```
+src/
+  app/
+    _layout.tsx              # AuthProvider + Stack raíz
+    index.tsx                # Redirect according to session
+    (auth)/                  # welcome, login, register
+    (app)/                   # inicio, mapa, educacion, mas (NativeTabs)
+    sos.tsx                  # Alerta SOS con cuenta regresiva
+    contactos/               # lista, nuevo, detalle
+    instituciones.tsx / institucion/[id].tsx
+    contenido/[id].tsx / cuestionario/[id].tsx
+    asistente.tsx / ajustes.tsx / compartir.tsx
+    seguimiento/[token].tsx  # vista pública del contacto
+  components/                # ui, logo (SVG), MapCanvas (SVG), Markdown
+  context/AuthContext.tsx
+  hooks/                     # contactos, sesión, alertas, educación, asistente, ubicación
+  lib/                       # supabase client, types, utils
+  constants/theme.ts
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Supabase
 
-## Join the community
+El cliente (URL y anon key) está en `src/lib/supabase.ts`. Se usan las tablas y RPC existentes: `alertar_sos`, `iniciar_acompanamiento`, `finalizar_acompanamiento`, `registrar_ubicacion`, `obtener_cuestionario`, `responder_cuestionario`, `ubicacion_publica`. Las políticas RLS se respetan: el cliente usa la clave anónima y el `auth.uid()` de la sesión.
 
-Join our community of developers creating universal apps.
+Datos semilla disponibles: 5 categorías educativas, 7 contenidos, 1 cuestionario de 3 preguntas y 3 instituciones de apoyo.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Notas
+
+- La salida web es `output: "single"` (SPA) en `app.json`: el modo `static` renderiza en Node y AsyncStorage/Supabase intentan acceder a `window` durante el prerenderizado.
+- `src/app/(app)/_layout.tsx` usa `NativeTabs` en móvil. En web se usa `src/app/(app)/_layout.web.tsx` con **JavaScript tabs**, porque `NativeTabs.Trigger.VectorIcon` invoca `expo-font.renderToImageAsync`, una API nativa no disponible en web.
+- El logo y el mapa se recrearon como SVG en `src/components/`. Si tienes los archivos originales del logo, reemplazar `logo.tsx` por el asset oficial dará una fidelidad pixel perfect.
+- Las funciones nativas (ubicación, vibración, portapapeles) funcionan en Expo Go; para producción usa un development build (`eas build --profile development`).
