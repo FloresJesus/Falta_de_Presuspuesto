@@ -1,24 +1,35 @@
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Text } from '@/components/text';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Svg, Circle } from 'react-native-svg';
 
 import { Button } from '@/components/ui';
 import { useAlertas } from '@/hooks/useAlertas';
 import { useUbicacion } from '@/hooks/useUbicacion';
+import { Gradients, Palette, Radius, Shadows } from '@/constants/theme';
+
+const TOTAL = 10;
+const RADIO = 54;
+const CIRC = 2 * Math.PI * RADIO;
 
 export default function SosScreen() {
   const { location } = useUbicacion();
   const { enviar, error: errorEnviar } = useAlertas();
   const [fase, setFase] = useState<'idle' | 'contando' | 'enviando' | 'enviada'>('idle');
-  const [segundos, setSegundos] = useState(10);
-  const [resultado, setResultado] = useState<{ mensaje?: string; contacto?: { nombre?: string; telefono?: string } | null } | null>(null);
+  const [segundos, setSegundos] = useState(TOTAL);
+  const [resultado, setResultado] = useState<{ mensaje?: string } | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const iniciarCuentaRegresiva = () => {
+    if (fase === 'contando' || fase === 'enviando') return;
     setFase('contando');
-    setSegundos(10);
+    setSegundos(TOTAL);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     timerRef.current = setInterval(() => {
       setSegundos((s) => {
         if (s <= 1) {
@@ -38,7 +49,7 @@ export default function SosScreen() {
       setFase('idle');
       return;
     }
-    setResultado({ mensaje: 'Alerta SOS enviada', contacto: null });
+    setResultado({ mensaje: 'Alerta SOS enviada' });
     setFase('enviada');
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   }
@@ -62,76 +73,168 @@ export default function SosScreen() {
   const cancelar = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     setFase('idle');
-    setSegundos(10);
+    setSegundos(TOTAL);
   };
 
+  const contando = fase === 'contando';
+
   return (
-    <View style={styles.container}>
-      <View style={styles.content}>
+    <LinearGradient colors={Gradients.hero} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} style={styles.root}>
+      <View style={styles.glow} />
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+        <View style={styles.topBar}>
+          <Pressable onPress={() => router.back()} style={styles.backBtn}>
+            <Ionicons name="arrow-back" size={28} color={Palette.surface} />
+          </Pressable>
+        </View>
+
         {fase !== 'enviada' ? (
-          <>
-            <Text style={styles.titulo}>¿Estás en peligro?</Text>
-            <Text style={styles.subtitulo}>
-              {fase === 'idle'
-                ? 'Si necesitas ayuda urgente, activa el SOS. En este MVP se registra una alerta simulada con tu contacto de confianza.'
-                : fase === 'contando'
-                  ? 'Podemos ayudarte en segundos.'
-                  : 'Enviando alerta...'}
+          <View style={styles.content}>
+            <View style={styles.rings}>
+              <View style={styles.ringOuter} />
+              <View style={styles.ringMiddle} />
+              <Pressable onPress={iniciarCuentaRegresiva} style={({ pressed }) => [styles.sosCircle, pressed && { transform: [{ scale: 0.98 }] }]}>
+                <LinearGradient colors={Gradients.accent} style={StyleSheet.absoluteFill} />
+                <Ionicons name="warning" size={104} color={Palette.surface} />
+              </Pressable>
+            </View>
+
+            <Text style={styles.title}>Alerta SOS</Text>
+            <Text style={styles.subtitle}>
+              Tu señal de emergencia será enviada a tus contactos de confianza
             </Text>
 
-            <Pressable
-              onPress={() => {
-                if (fase === 'idle') iniciarCuentaRegresiva();
-                else cancelar();
-              }}
-              disabled={fase === 'enviando'}
-              style={({ pressed }) => [styles.sosButton, pressed && { transform: [{ scale: 0.96 }] }]}>
-              <View style={styles.sosInner}>
-                <Ionicons name="warning" size={44} color="#FFFFFF" />
-                <Text style={styles.sosText}>{fase === 'idle' ? 'SOS' : `${segundos}`}</Text>
+            <View style={styles.countdown}>
+              <Svg width={132} height={132}>
+                <Circle cx={66} cy={66} r={RADIO} stroke="rgba(255,255,255,0.22)" strokeWidth={7} fill="none" />
+                <Circle
+                  cx={66}
+                  cy={66}
+                  r={RADIO}
+                  stroke={Palette.pink}
+                  strokeWidth={7}
+                  fill="none"
+                  strokeDasharray={`${CIRC} ${CIRC}`}
+                  strokeDashoffset={fase === 'idle' ? CIRC * 0.08 : CIRC * (1 - segundos / TOTAL)}
+                  strokeLinecap="round"
+                  transform="rotate(-90 66 66)"
+                />
+              </Svg>
+              <View style={styles.countdownText}>
+                <Text style={styles.countValue}>{segundos}</Text>
+                <Text style={styles.countUnit}>s</Text>
               </View>
-            </Pressable>
-
-            <Text style={styles.hint}>
-              {fase === 'idle' ? 'Mantén presionado. Tendremos 10 segundos para activar la alerta.' : fase === 'contando' ? 'Cancelar si ya no lo necesitas.' : 'Conectando con el protocolo de ayuda...'}
-            </Text>
-
-            {fase === 'idle' ? (
-              <Button title="Cancelar" variant="ghost" onPress={cancelar} />
-            ) : null}
+            </View>
 
             {errorEnviar ? <Text style={styles.error}>{errorEnviar}</Text> : null}
-          </>
+
+            <View style={styles.bottom}>
+              <Pressable
+                onPress={contando ? cancelar : () => router.back()}
+                style={({ pressed }) => [styles.cancelBtn, pressed && { opacity: 0.9 }]}>
+                <Text style={styles.cancelText}>Cancelar</Text>
+              </Pressable>
+            </View>
+          </View>
         ) : (
           <View style={styles.sentBox}>
             <View style={styles.sentIcon}>
-              <Ionicons name="checkmark" size={40} color="#FFFFFF" />
+              <Ionicons name="checkmark" size={48} color={Palette.surface} />
             </View>
-            <Text style={styles.sentTitulo}>Alerta SOS enviada</Text>
+            <Text style={styles.sentTitle}>Alerta SOS enviada</Text>
             <Text style={styles.sentText}>
-              Hemos registrado tu alerta. Tu contacto de confianza será notificado y el equipo de apoyo podrá iniciar el acompañamiento.
+              Hemos registrado tu alerta. Tu contacto de confianza será notificado y podrá iniciar el acompañamiento.
             </Text>
-            <Text style={styles.sentText}>Mensaje: {resultado?.mensaje ?? 'Alerta SOS de prueba enviada desde LÍA'}</Text>
-            <Button title="Listo" onPress={() => router.back()} fullWidth size="lg" />
+            <Text style={styles.sentMeta}>{resultado?.mensaje ?? 'Alerta SOS de prueba enviada desde LÍA'}</Text>
+            <View style={styles.bottom}>
+              <Button title="Listo" onPress={() => router.back()} fullWidth size="lg" />
+            </View>
           </View>
         )}
-      </View>
-    </View>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#22147C' },
-  content: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, paddingBottom: 60 },
-  titulo: { color: '#FFFFFF', fontSize: 30, fontWeight: '800', textAlign: 'center' },
-  subtitulo: { color: '#BCA8D0', fontSize: 14, fontWeight: '600', textAlign: 'center', marginTop: 10, marginBottom: 34 },
-  sosButton: { width: 190, height: 190, borderRadius: 95, backgroundColor: '#55147C', alignItems: 'center', justifyContent: 'center', shadowColor: '#55147C', shadowOpacity: 0.5, shadowRadius: 30, shadowOffset: { width: 0, height: 16 }, elevation: 10 },
-  sosInner: { alignItems: 'center', justifyContent: 'center' },
-  sosText: { color: '#FFFFFF', fontSize: 44, fontWeight: '800' },
-  hint: { color: '#BCA8D0', fontSize: 12, fontWeight: '700', marginTop: 18, textAlign: 'center' },
-  error: { color: '#F2717A', fontWeight: '700', marginTop: 12, textAlign: 'center' },
-  sentBox: { alignItems: 'center', marginTop: 20 },
-  sentIcon: { width: 84, height: 84, borderRadius: 42, backgroundColor: '#0E9F66', alignItems: 'center', justifyContent: 'center' },
-  sentTitulo: { color: '#FFFFFF', fontSize: 24, fontWeight: '800', marginTop: 16 },
-  sentText: { color: '#BCA8D0', fontSize: 14, fontWeight: '600', textAlign: 'center', marginTop: 8 },
+  root: { flex: 1 },
+  glow: {
+    position: 'absolute',
+    top: '12%',
+    alignSelf: 'center',
+    width: 520,
+    height: 520,
+    borderRadius: 260,
+    backgroundColor: 'rgba(242,41,105,0.10)',
+  },
+  safe: { flex: 1, paddingHorizontal: 24 },
+  topBar: { paddingTop: 6 },
+  backBtn: { width: 44, height: 44, alignItems: 'flex-start', justifyContent: 'center' },
+  content: { flex: 1, alignItems: 'center', paddingTop: 8 },
+  rings: { alignItems: 'center', justifyContent: 'center', width: 340, height: 340 },
+  ringOuter: {
+    position: 'absolute',
+    width: 340,
+    height: 340,
+    borderRadius: 170,
+    backgroundColor: 'rgba(242,41,105,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(242,41,105,0.18)',
+  },
+  ringMiddle: {
+    position: 'absolute',
+    width: 268,
+    height: 268,
+    borderRadius: 134,
+    backgroundColor: 'rgba(242,41,105,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(242,41,105,0.28)',
+  },
+  sosCircle: {
+    width: 196,
+    height: 196,
+    borderRadius: 98,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    ...(Shadows.floating ?? {}),
+  },
+  title: { color: Palette.surface, fontSize: 30, fontWeight: '800', textAlign: 'center', marginTop: 6, letterSpacing: -0.4 },
+  subtitle: {
+    color: 'rgba(255,255,255,0.88)',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginTop: 12,
+    lineHeight: 23,
+    maxWidth: 330,
+  },
+  countdown: { width: 132, height: 132, alignItems: 'center', justifyContent: 'center', marginTop: 28 },
+  countdownText: { position: 'absolute', alignItems: 'center' },
+  countValue: { color: Palette.surface, fontSize: 42, fontWeight: '800', lineHeight: 46 },
+  countUnit: { color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: '800', marginTop: -2 },
+  error: { color: '#FFB3C6', fontWeight: '700', marginTop: 10, textAlign: 'center' },
+  bottom: { alignSelf: 'stretch', marginTop: 'auto', paddingBottom: 12 },
+  cancelBtn: {
+    backgroundColor: Palette.surface,
+    borderRadius: Radius.pill,
+    height: 64,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...(Shadows.card ?? {}),
+  },
+  cancelText: { color: Palette.pink, fontSize: 18, fontWeight: '800' },
+  sentBox: { flex: 1, alignItems: 'center', justifyContent: 'center', width: '100%' },
+  sentIcon: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: Palette.success,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...(Shadows.floating ?? {}),
+  },
+  sentTitle: { color: Palette.surface, fontSize: 28, fontWeight: '800', marginTop: 18 },
+  sentText: { color: 'rgba(255,255,255,0.85)', fontSize: 15, fontWeight: '600', textAlign: 'center', marginTop: 10, lineHeight: 21 },
+  sentMeta: { color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: '600', textAlign: 'center', marginTop: 12 },
 });

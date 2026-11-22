@@ -1,37 +1,23 @@
-import { NativeTabs } from 'expo-router/native-tabs';
-import { useColorScheme } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Redirect, Tabs } from 'expo-router';
 
-import { Colors } from '@/constants/theme';
+import { AppTabBar } from '@/components/app-tab-bar';
+import { useAuth } from '@/context/AuthContext';
 
 export default function AppGroupLayout() {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
+  const { session, loading } = useAuth();
+
+  if (!loading && !session) {
+    return <Redirect href="/welcome" />;
+  }
 
   return (
-    <NativeTabs
-      backgroundColor={colors.background}
-      indicatorColor={colors.backgroundElement}
-      labelStyle={{ selected: { color: colors.text } }}>
-      <NativeTabs.Trigger name="inicio">
-        <NativeTabs.Trigger.Icon src={<NativeTabs.Trigger.VectorIcon family={Ionicons} name="home" />} />
-        <NativeTabs.Trigger.Label>Inicio</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="mapa">
-        <NativeTabs.Trigger.Icon src={<NativeTabs.Trigger.VectorIcon family={Ionicons} name="map" />} />
-        <NativeTabs.Trigger.Label>Mapa</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="educacion">
-        <NativeTabs.Trigger.Icon src={<NativeTabs.Trigger.VectorIcon family={Ionicons} name="book" />} />
-        <NativeTabs.Trigger.Label>Aprender</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="mas">
-        <NativeTabs.Trigger.Icon src={<NativeTabs.Trigger.VectorIcon family={Ionicons} name="apps" />} />
-        <NativeTabs.Trigger.Label>Más</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
-    </NativeTabs>
+    <Tabs
+      screenOptions={{ headerShown: false }}
+      tabBar={(props) => <AppTabBar {...props} />}>
+      <Tabs.Screen name="inicio" options={{ title: 'Inicio' }} />
+      <Tabs.Screen name="mapa" options={{ title: 'Mapa' }} />
+      <Tabs.Screen name="educacion" options={{ title: 'Educación' }} />
+      <Tabs.Screen name="mas" options={{ title: 'Más' }} />
+    </Tabs>
   );
 }

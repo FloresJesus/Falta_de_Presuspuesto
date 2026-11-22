@@ -8,9 +8,9 @@ export function LogoMark({ size = 120 }: { size?: number }) {
       {/* Pin de ubicación */}
       <Path
         d="M60 8 C49 8 42 16 42 26 C42 38 60 50 60 50 C60 50 78 38 78 26 C78 16 71 8 60 8 Z"
-        fill="#FAF9FF"
+        fill="#FFFFFF"
       />
-      <Circle cx="60" cy="25" r="6" fill="#22147C" />
+      <Circle cx="60" cy="25" r="6" fill="#4E1D71" />
       {/* Dos figuras humanas que forman la M */}
       <Circle cx="38" cy="50" r="9" fill="#FFFFFF" />
       <Circle cx="82" cy="50" r="9" fill="#FFFFFF" />
@@ -29,7 +29,7 @@ export function LogoMark({ size = 120 }: { size?: number }) {
         ry="12"
         transform="rotate(-8 60 86)"
         fill="none"
-        stroke="#E7D8F2"
+        stroke="#ECD5F2"
         strokeWidth="4"
       />
     </Svg>
@@ -39,7 +39,7 @@ export function LogoMark({ size = 120 }: { size?: number }) {
 /** Wordmark MASI: "M" + triángulo de alerta (la A) + "Si" con ondas. */
 export function LogoWordmark({
   size = 140,
-  color = '#FAF9FF',
+  color = '#FFFFFF',
 }: {
   size?: number;
   color?: string;
@@ -51,7 +51,7 @@ export function LogoWordmark({
       <Text x="0" y="44" fontSize="46" fontWeight="800" fill={color} fontFamily="System">
         M
       </Text>
-      <Path d="M62 6 L48 46 L76 46 Z" fill="#55147C" />
+      <Path d="M62 6 L48 46 L76 46 Z" fill="#F22969" />
       <Text x="62" y="40" fontSize="30" fontWeight="800" fill="#FFFFFF" fontFamily="System" textAnchor="middle">
         !
       </Text>
@@ -62,9 +62,9 @@ export function LogoWordmark({
         i
       </Text>
       {/* Ondas de señal */}
-      <Path d="M141 10 C147 4 155 4 161 10" fill="none" stroke="#55147C" strokeWidth="3" strokeLinecap="round" />
-      <Path d="M143 17 C149 11 157 11 163 17" fill="none" stroke="#55147C" strokeWidth="3" strokeLinecap="round" />
-      <Path d="M145 24 C150 19 156 19 161 24" fill="none" stroke="#55147C" strokeWidth="3" strokeLinecap="round" />
+      <Path d="M141 10 C147 4 155 4 161 10" fill="none" stroke="#F22969" strokeWidth="3" strokeLinecap="round" />
+      <Path d="M143 17 C149 11 157 11 163 17" fill="none" stroke="#F22969" strokeWidth="3" strokeLinecap="round" />
+      <Path d="M145 24 C150 19 156 19 161 24" fill="none" stroke="#F22969" strokeWidth="3" strokeLinecap="round" />
     </Svg>
   );
 }

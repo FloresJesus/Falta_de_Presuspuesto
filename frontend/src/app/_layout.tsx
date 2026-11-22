@@ -1,22 +1,34 @@
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { useFonts } from 'expo-font';
 
 import { AuthProvider } from '@/context/AuthContext';
+import { Palette } from '@/constants/theme';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    Poppins_400Regular: require('@/assets/fonts/Poppins-Regular.ttf'),
+    Poppins_500Medium: require('@/assets/fonts/Poppins-Medium.ttf'),
+    Poppins_600SemiBold: require('@/assets/fonts/Poppins-SemiBold.ttf'),
+    Poppins_700Bold: require('@/assets/fonts/Poppins-Bold.ttf'),
+    Poppins_800ExtraBold: require('@/assets/fonts/Poppins-ExtraBold.ttf'),
+  });
+
   useEffect(() => {
-    void SplashScreen.hideAsync();
-  }, []);
+    if (fontsLoaded) void SplashScreen.hideAsync();
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) return null;
 
   return (
     <AuthProvider>
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: '#FAF9FF' },
+          contentStyle: { backgroundColor: Palette.background },
         }}>
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(app)" options={{ headerShown: false }} />

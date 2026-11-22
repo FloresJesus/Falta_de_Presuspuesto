@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Text } from '@/components/text';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-import { Button, Card, Avatar } from '@/components/ui';
+import { Avatar, Button, Card, Hero, Toggle } from '@/components/ui';
 import { useContactos } from '@/hooks/useContactos';
 import { useSesion } from '@/hooks/useSesion';
+import { Palette, Radius, Shadows } from '@/constants/theme';
 
 export default function CompartirScreen() {
   const { contactos, loading, error } = useContactos();
@@ -34,93 +36,222 @@ export default function CompartirScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Acompáñame</Text>
-      <Text style={styles.subtitle}>
-        Comparte tu ubicación con una persona de confianza durante un acompañamiento.
-      </Text>
+    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <View style={styles.header}>
+        <Pressable onPress={() => router.back()} style={styles.iconBtn}>
+          <Ionicons name="chevron-back" size={20} color={Palette.purple} />
+        </Pressable>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.title}>Acompáñame</Text>
+          <Text style={styles.subtitle}>Comparte tu ubicación con una persona de confianza.</Text>
+        </View>
+      </View>
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
       {msg ? <Text style={styles.error}>{msg}</Text> : null}
 
       {!sesion ? (
-        <Card style={styles.card}>
-          <Text style={styles.sectionTitle}>1. Elige a tu contacto</Text>
-          {loading ? <Text style={styles.body}>Cargando contactos...</Text> : null}
-          {!loading && contactos.length === 0 ? (
-            <Text style={styles.body}>Necesitas registrar al menos un contacto de confianza.</Text>
-          ) : null}
-          {contactos.map((c) => (
-            <Pressable key={c.id} onPress={() => setContactoId(c.id)} style={({ pressed }) => [styles.contactRow, contactoSeleccionado === c.id && styles.contactRowOn, pressed && { opacity: 0.9 }]}>
-              <Avatar name={c.nombre} size={40} />
+        <>
+          <Card style={styles.card}>
+            <Text style={styles.sectionTitle}>1. Elige a tu contacto</Text>
+            {loading ? <Text style={styles.body}>Cargando contactos...</Text> : null}
+            {!loading && contactos.length === 0 ? (
+              <Text style={styles.body}>Necesitas registrar al menos un contacto de confianza.</Text>
+            ) : null}
+            {contactos.map((c) => {
+              const selected = contactoSeleccionado === c.id;
+              return (
+                <Pressable
+                  key={c.id}
+                  onPress={() => setContactoId(c.id)}
+                  style={({ pressed }) => [styles.contactRow, selected && styles.contactRowOn, pressed && { opacity: 0.9 }]}>
+                  <Avatar name={c.nombre} size={42} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.contactName}>{c.nombre}</Text>
+                    <Text style={styles.contactMeta}>{c.telefono}</Text>
+                  </View>
+                  <View style={[styles.radio, selected && styles.radioOn]}>
+                    {selected ? <Ionicons name="checkmark" size={14} color={Palette.surface} /> : null}
+                  </View>
+                </Pressable>
+              );
+            })}
+            {contactos.length === 0 ? (
+              <Button title="Crear contacto" size="sm" variant="soft" onPress={() => router.push('/contactos/nuevo')} />
+            ) : null}
+          </Card>
+
+          <Card style={styles.card}>
+            <Text style={styles.sectionTitle}>2. Destino (opcional)</Text>
+            <View style={styles.field}>
+              <Ionicons name="navigate-outline" size={18} color={Palette.muted} />
+              <TextInput
+                placeholder="¿A dónde vas?"
+                placeholderTextColor="#9A8BA8"
+                value={destino}
+                onChangeText={setDestino}
+                style={styles.input}
+              />
+            </View>
+
+            <View style={styles.toggleRow}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.contactName}>{c.nombre}</Text>
-                <Text style={styles.contactMeta}>{c.telefono}</Text>
+                <Text style={styles.toggleText}>Compartir mi ubicación</Text>
+                <Text style={styles.toggleDesc}>Solo con tu autorización explícita.</Text>
               </View>
-              {contactoSeleccionado === c.id ? <Ionicons name="checkmark-circle" size={22} color="#55147C" /> : null}
-            </Pressable>
-          ))}
-
-          <Text style={styles.sectionTitle}>2. Destino (opcional)</Text>
-          <TextInput placeholder="¿A dónde vas?" value={destino} onChangeText={setDestino} style={styles.input} />
-
-          <Pressable style={styles.toggleRow} onPress={() => setCompartir(!compartir)}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.toggleText}>Compartir mi ubicación</Text>
-              <Text style={styles.toggleDesc}>Solo con tu autorización explícita.</Text>
+              <Toggle value={compartir} onChange={setCompartir} />
             </View>
-            <View style={[styles.toggle, compartir && styles.toggleOn]}>
-              <View style={[styles.toggleKnob, compartir && { transform: 'translateX(20px)' }]} />
-            </View>
-          </Pressable>
 
-          <Button title="Iniciar acompañamiento" onPress={() => void handleIniciar()} loading={saving} size="lg" fullWidth disabled={!contactoSeleccionado} />
-        </Card>
+            <Button
+              title="Iniciar acompañamiento"
+              onPress={() => void handleIniciar()}
+              loading={saving}
+              size="lg"
+              fullWidth
+              disabled={!contactoSeleccionado}
+            />
+          </Card>
+        </>
       ) : (
-        <Card style={styles.card}>
-          <Text style={styles.sectionTitle}>Acompañamiento activo</Text>
-          <View style={styles.activeRow}>
-            <Avatar name={contactos.find((c) => c.id === sesion.contacto_id)?.nombre ?? 'amiga'} size={44} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.contactName}>{contactos.find((c) => c.id === sesion.contacto_id)?.nombre ?? 'Contacto'}</Text>
-              <Text style={styles.contactMeta}>{sesion.destino ?? 'Sin destino'}</Text>
+        <>
+          <Hero style={styles.activeHero}>
+            <View style={styles.activeTop}>
+              <View style={styles.activeIcon}>
+                <Ionicons name="shield-checkmark" size={26} color={Palette.surface} />
+              </View>
+              <View style={styles.livePill}>
+                <View style={styles.liveDot} />
+                <Text style={styles.liveText}>Activo</Text>
+              </View>
             </View>
-          </View>
-          <Text style={styles.body}>Compartiendo ubicación: {sesion.compartir_ubicacion ? 'Sí' : 'No'}</Text>
+            <Text style={styles.activeTitle}>Acompañamiento activo</Text>
+            <View style={styles.activeRow}>
+              <Avatar name={contactos.find((c) => c.id === sesion.contacto_id)?.nombre ?? 'amiga'} size={42} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.activeContact}>
+                  {contactos.find((c) => c.id === sesion.contacto_id)?.nombre ?? 'Contacto'}
+                </Text>
+                <Text style={styles.activeMeta}>{sesion.destino ?? 'Sin destino'}</Text>
+              </View>
+            </View>
+            <Text style={styles.activeSharing}>
+              {sesion.compartir_ubicacion ? 'Compartiendo ubicación en tiempo real' : 'Ubicación no compartida'}
+            </Text>
+          </Hero>
+
           {sesion.token_seguimiento ? (
-            <Text style={styles.token}>Token: {sesion.token_seguimiento}</Text>
+            <Card style={styles.card}>
+              <Text style={styles.sectionTitle}>Enlace de seguimiento</Text>
+              <Text style={styles.token}>{sesion.token_seguimiento}</Text>
+              <Text style={styles.body}>Compártelo con tu contacto para que vea tu ubicación.</Text>
+            </Card>
           ) : null}
+
           <Button title="Finalizar acompañamiento" variant="outline" size="lg" fullWidth onPress={() => void handleFinalizar()} />
           <View style={{ height: 10 }} />
           <Button title="Enviar SOS" onPress={() => router.push('/sos')} variant="accent" size="lg" fullWidth />
-        </Card>
+        </>
       )}
 
       <View style={{ height: 12 }} />
-      <Button title="Volver" variant="outline" size="lg" fullWidth onPress={() => router.back()} />
+      <Button title="Volver" variant="ghost" size="lg" fullWidth onPress={() => router.back()} />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { padding: 20, paddingTop: 64, paddingBottom: 40 },
-  title: { fontSize: 24, fontWeight: '800', color: '#22147C', marginBottom: 6 },
-  subtitle: { fontSize: 13, fontWeight: '600', color: '#6B5C7C', marginBottom: 14 },
-  error: { color: '#E5484D', fontWeight: '700', fontSize: 13, marginBottom: 10 },
+  container: { flexGrow: 1, backgroundColor: Palette.background, paddingHorizontal: 20, paddingTop: 16, paddingBottom: 32 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
+  iconBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: Radius.md,
+    backgroundColor: Palette.surface,
+    borderWidth: 1,
+    borderColor: Palette.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...(Shadows.card ?? {}),
+  },
+  title: { fontSize: 22, fontWeight: '800', color: Palette.ink, letterSpacing: -0.3 },
+  subtitle: { fontSize: 12, fontWeight: '600', color: Palette.muted, marginTop: 2 },
+  error: { color: Palette.danger, fontWeight: '700', fontSize: 13, marginBottom: 10 },
   card: { marginBottom: 12 },
-  sectionTitle: { fontSize: 15, fontWeight: '800', color: '#22147C', marginBottom: 10 },
-  body: { fontSize: 13, fontWeight: '600', color: '#6B5C7C', marginBottom: 8 },
-  contactRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#E7DDF2' },
-  contactRowOn: { backgroundColor: '#F0EAF9', borderRadius: 12, paddingHorizontal: 10 },
-  contactName: { fontSize: 14, fontWeight: '800', color: '#22147C' },
-  contactMeta: { fontSize: 12, fontWeight: '600', color: '#6B5C7C', marginTop: 2 },
-  input: { backgroundColor: '#FFFFFF', borderRadius: 14, borderWidth: 1, borderColor: '#E7DDF2', paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: '#22147C', marginBottom: 12 },
-  toggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFFFFF', borderRadius: 14, borderWidth: 1, borderColor: '#E7DDF2', padding: 14, marginBottom: 14 },
-  toggleText: { fontSize: 14, fontWeight: '800', color: '#22147C' },
-  toggleDesc: { fontSize: 12, fontWeight: '600', color: '#6B5C7C', marginTop: 2 },
-  toggle: { width: 46, height: 28, borderRadius: 999, borderWidth: 1.5, justifyContent: 'center', paddingHorizontal: 3, backgroundColor: '#EFE7F8' },
-  toggleOn: { backgroundColor: '#55147C', borderColor: '#55147C' },
-  toggleKnob: { width: 20, height: 20, borderRadius: 10, backgroundColor: '#FFFFFF' },
-  activeRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
-  token: { fontSize: 12, fontWeight: '700', color: '#55147C', backgroundColor: '#EFE7F8', borderRadius: 10, padding: 10, marginBottom: 12 },
+  sectionTitle: { fontSize: 15, fontWeight: '800', color: Palette.ink, marginBottom: 10 },
+  body: { fontSize: 13, fontWeight: '600', color: Palette.muted, marginBottom: 8 },
+  contactRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 9 },
+  contactRowOn: { backgroundColor: Palette.purpleSoft, borderRadius: Radius.md, paddingHorizontal: 10 },
+  contactName: { fontSize: 14, fontWeight: '800', color: Palette.ink },
+  contactMeta: { fontSize: 12, fontWeight: '600', color: Palette.muted, marginTop: 2 },
+  radio: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: Palette.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioOn: { backgroundColor: Palette.purple, borderColor: Palette.purple },
+  field: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: Palette.background,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Palette.border,
+    paddingHorizontal: 14,
+    marginBottom: 12,
+  },
+  input: { flex: 1, paddingVertical: 13, fontSize: 14, color: Palette.ink },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Palette.background,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Palette.border,
+    padding: 14,
+    marginBottom: 14,
+    gap: 12,
+  },
+  toggleText: { fontSize: 14, fontWeight: '800', color: Palette.ink },
+  toggleDesc: { fontSize: 11, fontWeight: '600', color: Palette.muted, marginTop: 2 },
+  activeHero: { borderRadius: Radius.xl, marginBottom: 12 },
+  activeTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  activeIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  livePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    borderRadius: Radius.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  liveDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#6EF0B8' },
+  liveText: { color: Palette.surface, fontSize: 10, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
+  activeTitle: { color: Palette.surface, fontSize: 20, fontWeight: '800', marginTop: 12 },
+  activeRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 12 },
+  activeContact: { color: Palette.surface, fontSize: 14, fontWeight: '800' },
+  activeMeta: { color: 'rgba(255,255,255,0.75)', fontSize: 12, fontWeight: '600', marginTop: 2 },
+  activeSharing: { color: Palette.lilac, fontSize: 11, fontWeight: '700', marginTop: 12 },
+  token: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: Palette.purple,
+    backgroundColor: Palette.purpleSoft,
+    borderRadius: Radius.sm,
+    padding: 10,
+    marginBottom: 8,
+  },
 });

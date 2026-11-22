@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '@/components/text';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-import { Button, Card } from '@/components/ui';
+import { Button, Card, IconBubble, StatusPill } from '@/components/ui';
 import { MapCanvas } from '@/components/MapCanvas';
 import { supabase } from '@/lib/supabase';
 import { EMERGENCIA_NUMERO, formatearFecha } from '@/lib/utils';
+import { Palette, Radius } from '@/constants/theme';
 
 interface UbicacionPublica {
   valida: boolean;
@@ -47,15 +49,18 @@ export default function SeguimientoScreen() {
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#55147C" />
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={Palette.purple} />
       </View>
     );
   }
 
   if (error || !data) {
     return (
-      <View style={styles.container}>
+      <View style={styles.center}>
+        <IconBubble size={64} background={Palette.pinkSoft}>
+          <Ionicons name="link-outline" size={28} color={Palette.pink} />
+        </IconBubble>
         <Text style={styles.title}>Enlace no válido</Text>
         <Text style={styles.body}>No pudimos encontrar el acompañamiento solicitado.</Text>
       </View>
@@ -64,7 +69,10 @@ export default function SeguimientoScreen() {
 
   if (!data.valida) {
     return (
-      <View style={styles.container}>
+      <View style={styles.center}>
+        <IconBubble size={64} background={Palette.pinkSoft}>
+          <Ionicons name="time-outline" size={28} color={Palette.pink} />
+        </IconBubble>
         <Text style={styles.title}>Enlace no válido</Text>
         <Text style={styles.body}>Este enlace de seguimiento ya no está activo.</Text>
         <Button title="Cerrar" variant="outline" size="lg" fullWidth onPress={() => router.back()} />
@@ -75,16 +83,25 @@ export default function SeguimientoScreen() {
   const compartiendo = data.estado === 'activa' && Boolean(data.compartir_ubicacion) && data.ubicacion != null;
 
   return (
-    <ScrollView contentContainerStyle={styles.content}>
+    <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
-        <Ionicons name="shield-checkmark" size={28} color="#55147C" />
-        <Text style={styles.title}>Acompañamiento de {data.nombre_usuaria ?? 'una usuaria'}</Text>
+        <IconBubble size={46} background={Palette.purpleSoft}>
+          <Ionicons name="shield-checkmark" size={22} color={Palette.purple} />
+        </IconBubble>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.title}>Acompañamiento</Text>
+          <Text style={styles.subtitle}>de {data.nombre_usuaria ?? 'una usuaria'}</Text>
+        </View>
+        <StatusPill label={compartiendo ? 'En línea' : 'Inactivo'} tone={compartiendo ? 'on' : 'off'} />
       </View>
-      <Text style={styles.subtitle}>Esta persona compartió su ubicación con contigo.</Text>
+
+      <Text style={styles.intro}>Esta persona compartió su ubicación contigo.</Text>
 
       {compartiendo ? (
         <>
-          <MapCanvas latitude={data.ubicacion?.latitud ?? null} longitude={data.ubicacion?.longitud ?? null} status="sharing" />
+          <View style={styles.mapWrap}>
+            <MapCanvas latitude={data.ubicacion?.latitud ?? null} longitude={data.ubicacion?.longitud ?? null} status="sharing" />
+          </View>
           <Card style={styles.card}>
             <Text style={styles.metaLabel}>Última ubicación</Text>
             <Text style={styles.body}>
@@ -95,16 +112,24 @@ export default function SeguimientoScreen() {
         </>
       ) : (
         <Card style={styles.card}>
-          <Text style={styles.body}>La usuaria aún no ha compartido su ubicación en esta sesión.</Text>
+          <View style={styles.waitRow}>
+            <Ionicons name="time-outline" size={18} color={Palette.purple} />
+            <Text style={styles.body}>La usuaria aún no ha compartido su ubicación en esta sesión.</Text>
+          </View>
         </Card>
       )}
 
-      {data.destino ? <Card style={styles.card}><Text style={styles.body}>Destino: {data.destino}</Text></Card> : null}
+      {data.destino ? (
+        <Card style={styles.card}>
+          <Text style={styles.metaLabel}>Destino</Text>
+          <Text style={styles.body}>{data.destino}</Text>
+        </Card>
+      ) : null}
 
-      <Card style={styles.card}>
-        <Text style={styles.body}>
-          Si esta situación es grave, por favor contacta a los servicios de emergencia al <Text style={styles.bold}>{EMERGENCIA_NUMERO}</Text>.
-          Tu acompañamiento puede continuar desde la app original.
+      <Card style={[styles.card, styles.emergencyCard]}>
+        <Ionicons name="call" size={18} color={Palette.danger} />
+        <Text style={styles.emergencyText}>
+          Si esta situación es grave, contacta a emergencias al <Text style={styles.bold}>{EMERGENCIA_NUMERO}</Text>.
         </Text>
       </Card>
 
@@ -114,13 +139,25 @@ export default function SeguimientoScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FAF9FF' },
-  content: { padding: 20, paddingTop: 70, paddingBottom: 40 },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  title: { fontSize: 22, fontWeight: '800', color: '#22147C' },
-  subtitle: { fontSize: 13, fontWeight: '600', color: '#6B5C7C', marginTop: 6, marginBottom: 14 },
-  card: { marginBottom: 12 },
-  metaLabel: { fontSize: 11, fontWeight: '800', letterSpacing: 0.8, textTransform: 'uppercase', color: '#55147C', marginBottom: 6 },
-  body: { fontSize: 14, fontWeight: '600', color: '#22147C', lineHeight: 20 },
+  container: { flexGrow: 1, backgroundColor: Palette.background, paddingHorizontal: 20, paddingTop: 16, paddingBottom: 32 },
+  center: {
+    flex: 1,
+    backgroundColor: Palette.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    gap: 12,
+  },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 },
+  title: { fontSize: 21, fontWeight: '800', color: Palette.ink, letterSpacing: -0.3 },
+  subtitle: { fontSize: 12, fontWeight: '600', color: Palette.muted, marginTop: 2 },
+  intro: { fontSize: 13, fontWeight: '600', color: Palette.muted, marginBottom: 12 },
+  mapWrap: { height: 340, borderRadius: Radius.xxl, overflow: 'hidden', borderWidth: 1, borderColor: Palette.border },
+  card: { marginTop: 12 },
+  metaLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 0.8, textTransform: 'uppercase', color: Palette.purple, marginBottom: 6 },
+  body: { fontSize: 13, fontWeight: '600', color: Palette.ink, lineHeight: 19 },
   bold: { fontWeight: '800' },
+  waitRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  emergencyCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: Palette.dangerSoft, borderWidth: 0 },
+  emergencyText: { color: '#8A3A40', fontSize: 12, fontWeight: '600', flex: 1, lineHeight: 18 },
 });

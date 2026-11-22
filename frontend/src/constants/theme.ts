@@ -1,39 +1,80 @@
 /**
- * Tema de marca de LÍA / MASI.
- * Paleta principal: primary #55147C, secondary #22147C, third #FAF9FF.
- * Los tonos claros se derivan de esos tres colores; los colores de estado
- * (éxito/peligro/advertencia) se conservan por motivos funcionales.
+ * Tema de marca de LÍA / MÁSi.
+ *
+ * Paleta base solicitada:
+ *   - #55147C  morado principal
+ *   - #22147C  azul profundo (texto / contraste)
+ *   - #FAF9FF  fondo casi blanco
+ *
+ * Acento del mockup:
+ *   - #F32969  rosa (CTA principal y SOS)
+ *   - #DDB4E6  lila secundario
+ *
+ * Los colores de estado (éxito/peligro/advertencia) se conservan por
+ * motivos funcionales y de accesibilidad.
  */
 
 import { Platform, StyleSheet } from 'react-native';
 
+export const Palette = {
+  purple: '#4E1D71',
+  purpleDeep: '#2E0F45',
+  purpleSoft: '#F0E3F6',
+  purpleMist: '#F6EAF9',
+  pink: '#F22969',
+  pinkDeep: '#D8125A',
+  pinkSoft: '#FDE3EC',
+  lilac: '#ECD5F2',
+  lilacSoft: '#F6EAF9',
+  background: '#FBF6FC',
+  surface: '#FFFFFF',
+  ink: '#4E1D71',
+  muted: '#8A7B93',
+  border: '#F0E6F3',
+  success: '#2EBF70',
+  successSoft: '#DDF5E9',
+  danger: '#E5484D',
+  dangerSoft: '#FBE7E8',
+  warning: '#C77400',
+  warningSoft: '#FCEEDA',
+} as const;
+
+/** Degradados reutilizables para héroes, botones y fondos. */
+export const Gradients = {
+  hero: ['#5B1F7A', '#4E1D71', '#3E185A'] as const,
+  primary: ['#5E2386', '#4E1D71'] as const,
+  accent: ['#FF5C86', '#F22969', '#D8125A'] as const,
+  soft: ['#FBF6FC', '#F3E4F8'] as const,
+  lavender: ['#ECD5F2', '#DDBCE8'] as const,
+};
+
 export const Colors = {
   light: {
-    text: '#22147C',
-    background: '#FAF9FF',
-    backgroundElement: '#F0EAF9',
-    backgroundSelected: '#E7D8F2',
-    textSecondary: '#6B5C7C',
-    primary: '#55147C',
-    primaryDark: '#22147C',
-    primarySoft: '#EFE7F8',
-    accent: '#55147C',
-    accentDark: '#22147C',
-    accentSoft: '#EFE7F8',
-    secondary: '#22147C',
-    secondarySoft: '#F3ECFA',
-    surface: '#FFFFFF',
-    border: '#E7DDF2',
-    success: '#0E9F66',
-    successSoft: '#DDF5E9',
-    danger: '#E5484D',
-    dangerSoft: '#FBE7E8',
-    warning: '#C77400',
-    warningSoft: '#FCEEDA',
-    mapLand: '#F0EAF9',
-    mapPark: '#E3EED8',
-    mapWater: '#DAEAF3',
-    shadow: 'rgba(85, 20, 124, 0.12)',
+    text: Palette.ink,
+    background: Palette.background,
+    backgroundElement: '#F6EAF9',
+    backgroundSelected: '#ECD5F2',
+    textSecondary: Palette.muted,
+    primary: Palette.purple,
+    primaryDark: Palette.purpleDeep,
+    primarySoft: Palette.purpleSoft,
+    accent: Palette.pink,
+    accentDark: Palette.pinkDeep,
+    accentSoft: Palette.pinkSoft,
+    secondary: Palette.lilac,
+    secondarySoft: Palette.lilacSoft,
+    surface: Palette.surface,
+    border: Palette.border,
+    success: Palette.success,
+    successSoft: Palette.successSoft,
+    danger: Palette.danger,
+    dangerSoft: Palette.dangerSoft,
+    warning: Palette.warning,
+    warningSoft: Palette.warningSoft,
+    mapLand: '#EDE0F4',
+    mapPark: '#D9EAC9',
+    mapWater: '#D6E8F2',
+    shadow: 'rgba(78, 29, 113, 0.14)',
   },
   dark: {
     text: '#FAF9FF',
@@ -41,13 +82,13 @@ export const Colors = {
     backgroundElement: '#1E1130',
     backgroundSelected: '#2A1645',
     textSecondary: '#C9BED6',
-    primary: '#8F6DB5',
-    primaryDark: '#6A4A98',
+    primary: '#B98BD8',
+    primaryDark: '#8F6DB5',
     primarySoft: '#2A1645',
-    accent: '#8F6DB5',
-    accentDark: '#B99FD0',
-    accentSoft: '#2A1645',
-    secondary: '#C9BED6',
+    accent: '#FF6B93',
+    accentDark: '#F32969',
+    accentSoft: '#3C1828',
+    secondary: '#DDB4E6',
     secondarySoft: '#241436',
     surface: '#1E1130',
     border: '#3A2349',
@@ -95,6 +136,38 @@ export const Spacing = {
   four: 24,
   five: 32,
   six: 64,
+} as const;
+
+export const Radius = {
+  sm: 12,
+  md: 16,
+  lg: 20,
+  xl: 26,
+  xxl: 34,
+  pill: 999,
+} as const;
+
+export const Shadows = {
+  card: Platform.select({
+    ios: {
+      shadowColor: Palette.purple,
+      shadowOpacity: 0.1,
+      shadowRadius: 18,
+      shadowOffset: { width: 0, height: 8 },
+    },
+    android: { elevation: 3 },
+    default: {},
+  }),
+  floating: Platform.select({
+    ios: {
+      shadowColor: Palette.purple,
+      shadowOpacity: 0.22,
+      shadowRadius: 24,
+      shadowOffset: { width: 0, height: 12 },
+    },
+    android: { elevation: 8 },
+    default: {},
+  }),
 } as const;
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;

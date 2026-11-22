@@ -1,69 +1,52 @@
-import { ScrollView, StyleSheet, Text, View, Image } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Text } from '@/components/text';
 import { router } from 'expo-router';
-import { Button } from '@/components/ui';
+import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Svg, Polygon } from 'react-native-svg';
 
-const FEATURES = [
-  { icon: '🛡️', title: 'Alerta SOS con red de apoyo', text: 'Conecta con una persona de confianza y activa una alerta en segundos.' },
-  { icon: '📍', title: 'Acompañamiento seguro', text: 'Comparte tu ubicación solo durante un acompañamiento autorizado.' },
-  { icon: '📚', title: 'Educación y rutas de ayuda', text: 'Aprende señales de alerta y conoce dónde denunciar en Bolivia.' },
-];
+import { BrandLogo, Button } from '@/components/ui';
+import { Gradients, Palette } from '@/constants/theme';
 
 export default function WelcomeScreen() {
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.hero}>
-        <Image
-          source={require('@/assets/images/logos.png')}
-          style={{ width: 170, height: 170, borderRadius: 44, overflow: 'hidden' }}
-          resizeMode="cover"
-        />
-        <Text style={styles.tagline}>Tu seguridad. Siempre contigo.</Text>
-      </View>
+    <LinearGradient colors={Gradients.hero} start={{ x: 0.2, y: 0 }} end={{ x: 0.6, y: 1 }} style={styles.root}>
+      <Svg style={StyleSheet.absoluteFill} viewBox="0 0 390 844" preserveAspectRatio="xMidYMax slice">
+        <Polygon points="195,690 330,844 60,844" fill="rgba(0,0,0,0.10)" />
+        <Polygon points="195,735 295,844 95,844" fill="rgba(0,0,0,0.08)" />
+      </Svg>
 
-      <View style={styles.features}>
-        {FEATURES.map((f, i) => (
-          <View key={i} style={styles.featureCard}>
-            <Text style={styles.featureIcon}>{f.icon}</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.featureTitle}>{f.title}</Text>
-              <Text style={styles.featureText}>{f.text}</Text>
-            </View>
-          </View>
-        ))}
-      </View>
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+        <View style={styles.hero}>
+          <BrandLogo width={190} />
+          <Text style={styles.tagline}>Tu seguridad.{'\n'}Siempre contigo.</Text>
+        </View>
 
-      <View style={styles.actions}>
-        <Button title="Comenzar" onPress={() => router.push('/register')} size="lg" fullWidth />
-        <Button title="Iniciar sesión" onPress={() => router.push('/login')} variant="outline" size="lg" fullWidth />
-      </View>
-
-      <Text style={styles.footer}>LÍA · Acompañamiento en seguridad personal</Text>
-    </ScrollView>
+        <View style={styles.actions}>
+          <Button title="Comenzar" onPress={() => router.push('/register')} variant="accent" size="lg" fullWidth />
+          <Pressable onPress={() => router.push('/login')} style={styles.loginBtn}>
+            <Text style={styles.loginText}>Iniciar sesión</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, backgroundColor: '#FAF9FF', paddingHorizontal: 24, paddingTop: 48, paddingBottom: 28 },
-  hero: { alignItems: 'center', marginTop: 24 },
-  logoWrap: {
-    width: 170,
-    height: 170,
-    borderRadius: 44,
-    backgroundColor: '#55147C',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#55147C',
-    shadowOpacity: 0.35,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 8,
+  root: { flex: 1 },
+  safe: { flex: 1, paddingHorizontal: 28 },
+  hero: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 40 },
+  tagline: {
+    color: Palette.surface,
+    fontSize: 20,
+    fontWeight: '500',
+    textAlign: 'center',
+    lineHeight: 28,
+    letterSpacing: -0.1,
+    marginTop: 30,
   },
-  tagline: { color: '#6B5C7C', fontSize: 15, fontWeight: '600', textAlign: 'center', marginTop: 14, maxWidth: 300 },
-  features: { marginTop: 30, gap: 10 },
-  featureCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#FFFFFF', borderRadius: 18, padding: 14, borderWidth: 1, borderColor: '#E7DDF2' },
-  featureIcon: { fontSize: 26 },
-  featureTitle: { color: '#22147C', fontSize: 14, fontWeight: '800' },
-  featureText: { color: '#6B5C7C', fontSize: 12, fontWeight: '600', marginTop: 2 },
-  actions: { marginTop: 'auto', gap: 10 },
-  footer: { textAlign: 'center', color: '#6B5C7C', fontSize: 11, fontWeight: '700', letterSpacing: 1.2, textTransform: 'uppercase', marginTop: 18 },
+  actions: { paddingBottom: 8 },
+  loginBtn: { alignItems: 'center', paddingVertical: 20 },
+  loginText: { color: Palette.surface, fontSize: 16, fontWeight: '600' },
 });

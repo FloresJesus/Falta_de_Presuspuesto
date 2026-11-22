@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Text } from '@/components/text';
 import { MarkdownBlock, parseInline, renderMarkdown } from '@/lib/utils';
 
 export function Markdown({ text, style }: { text: string; style?: any }) {
@@ -46,10 +47,10 @@ export function Markdown({ text, style }: { text: string; style?: any }) {
 }
 
 const styles = StyleSheet.create({
-  paragraph: { fontSize: 15, lineHeight: 24, color: '#22147C', marginBottom: 10, fontWeight: '500' },
+  paragraph: { fontSize: 15, lineHeight: 24, color: '#4E1D71', marginBottom: 10, fontWeight: '500' },
   paragraphBold: { fontWeight: '800' },
   heading: { fontSize: 19, fontWeight: '800', lineHeight: 26, marginTop: 14, marginBottom: 8 },
   headingBold: { fontWeight: '800' },
   list: { marginBottom: 10 },
-  listItem: { fontSize: 15, lineHeight: 22, color: '#22147C', marginBottom: 3, fontWeight: '600' },
+  listItem: { fontSize: 15, lineHeight: 22, color: '#4E1D71', marginBottom: 3, fontWeight: '600' },
 });
