@@ -58,8 +58,8 @@
 ### 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/FloresJesus/Sin_Presuspuesto.git
-cd Sin_Presuspuesto
+git clone https://github.com/FloresJesus/Falta_de_Presuspuesto.git
+cd Falta_de_Presuspuesto
 ```
 
 ### 2. Configurar el frontend
