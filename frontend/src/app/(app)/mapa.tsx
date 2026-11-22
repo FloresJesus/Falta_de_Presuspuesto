@@ -11,6 +11,7 @@ import { Badge, Button, Card } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
 import { useUbicacion } from '@/hooks/useUbicacion';
 import { useZonasPeligro } from '@/hooks/useZonasPeligro';
+import { useAlertasRecibidas } from '@/hooks/useAlertasRecibidas';
 import type { ZonaPeligro } from '@/lib/types';
 import { Palette, Radius, Shadows } from '@/constants/theme';
 
@@ -21,6 +22,7 @@ export default function MapaScreen() {
   const { profile } = useAuth();
   const { location, obtenerPosicion, solicitarPermiso } = useUbicacion();
   const { zonas, rutas, error, cargar, crear, desactivar } = useZonasPeligro();
+  const { alertas: sosRecibidas, cargar: cargarSos } = useAlertasRecibidas();
   const [seleccion, setSeleccion] = useState<ZonaPeligro | null>(null);
   const [formVisible, setFormVisible] = useState(false);
   const [form, setForm] = useState({ nombre: '', descripcion: '', latitud: '', longitud: '', radio: '300', indice: '3', tipo: 'zona' as ZonaPeligro['tipo'] });
@@ -29,7 +31,12 @@ export default function MapaScreen() {
   const esAdmin = profile?.rol === 'admin';
   const webRef = useRef<WebViewType | null>(null);
   // Carga diferida para no evaluar codegenNativeComponent en react-native-web.
-  useFocusEffect(useCallback(() => { void cargar(); }, [cargar]));
+  useFocusEffect(
+    useCallback(() => {
+      void cargar();
+      void cargarSos();
+    }, [cargar, cargarSos]),
+  );
 
   useEffect(() => {
     void (async () => {
@@ -90,9 +97,11 @@ export default function MapaScreen() {
         webRef={webRef}
         zonas={zonas}
         rutas={rutas}
+        alertas={sosRecibidas}
         userLocation={location}
         center={{ latitude: region.latitude, longitude: region.longitude }}
         onZonePress={setSeleccion}
+        onAlertaPress={(a) => router.push(`/alerta-sos/${a.id}`)}
         onMapPress={(lat, lng) => setForm((f) => ({ ...f, latitud: String(lat), longitud: String(lng) }))}
       />
 
@@ -124,6 +133,28 @@ export default function MapaScreen() {
         </View>
 
         <ScrollView style={styles.lista} showsVerticalScrollIndicator={false}>
+          {sosRecibidas.length > 0 ? (
+            <>
+              <Text style={[styles.listaTitulo, { color: Palette.danger }]}>Alertas SOS recibidas</Text>
+              {sosRecibidas.map((a) => (
+                <Pressable key={a.id} onPress={() => router.push(`/alerta-sos/${a.id}`)} style={styles.item}>
+                  <View style={[styles.itemBadge, { backgroundColor: Palette.danger }]}>
+                    <Ionicons name="warning" size={15} color={Palette.surface} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.itemNombre}>SOS de {a.nombre_usuaria}</Text>
+                    <Text style={styles.itemDesc}>
+                      {a.latitud != null && a.longitud != null
+                        ? `Ubicación: ${a.latitud.toFixed(4)}, ${a.longitud.toFixed(4)}`
+                        : 'Sin ubicación disponible'}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color={Palette.purple} />
+                </Pressable>
+              ))}
+            </>
+          ) : null}
+
           <Text style={styles.listaTitulo}>Calles y zonas peligrosas</Text>
           {rutas.map((r) => (
             <View key={r.id} style={styles.item}>

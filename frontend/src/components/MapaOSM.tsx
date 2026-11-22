@@ -3,6 +3,7 @@ import { StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
 
 import type { RutaPeligro, ZonaPeligro } from '@/lib/types';
+import type { AlertaRecibida } from '@/hooks/useAlertasRecibidas';
 
 type Centro = { latitude: number; longitude: number };
 
@@ -20,22 +21,26 @@ const MapaWebView = WebView as unknown as React.ComponentType<{
 export function MapaOSM({
   zonas,
   rutas,
+  alertas,
   center,
   userLocation,
   onZonePress,
+  onAlertaPress,
   onMapPress,
   webRef,
 }: {
   zonas: ZonaPeligro[];
   rutas: RutaPeligro[];
+  alertas: AlertaRecibida[];
   center: Centro;
   userLocation?: Centro | null;
   onZonePress: (z: ZonaPeligro) => void;
+  onAlertaPress?: (a: AlertaRecibida) => void;
   onMapPress?: (lat: number, lng: number) => void;
   webRef?: React.RefObject<WebView | null>;
 }) {
   const [inicial] = useState(center);
-  const html = useMemo(() => buildHtml(zonas, rutas, inicial), [zonas, rutas, inicial]);
+  const html = useMemo(() => buildHtml(zonas, rutas, alertas, inicial), [zonas, rutas, alertas, inicial]);
 
   function marcarMiUbicacion() {
     if (userLocation && webRef?.current) {
@@ -66,6 +71,10 @@ export function MapaOSM({
             const z = zonas.find((item) => item.id === data.id);
             if (z) onZonePress(z);
           }
+          if (data.type === 'alerta' && data.id) {
+            const a = alertas.find((item) => item.id === data.id);
+            if (a) onAlertaPress?.(a);
+          }
           if (data.type === 'mapa' && data.lat != null && data.lng != null) {
             onMapPress?.(data.lat, data.lng);
           }
@@ -81,7 +90,7 @@ function esc(texto: string | null | undefined) {
   return (texto ?? '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function buildHtml(zonas: ZonaPeligro[], rutas: RutaPeligro[], center: Centro) {
+function buildHtml(zonas: ZonaPeligro[], rutas: RutaPeligro[], alertas: AlertaRecibida[], center: Centro) {
   const datos = zonas.map((z) => ({
     id: z.id,
     nombre: esc(z.nombre),
@@ -98,6 +107,15 @@ function buildHtml(zonas: ZonaPeligro[], rutas: RutaPeligro[], center: Centro) {
     puntos: r.coordenadas,
     indice: r.indice_peligro,
   }));
+  const alertasDatos = alertas
+    .filter((a) => a.latitud != null && a.longitud != null)
+    .map((a) => ({
+      id: a.id,
+      nombre: esc(a.nombre_usuaria),
+      mensaje: esc(a.mensaje),
+      lat: a.latitud,
+      lng: a.longitud,
+    }));
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
@@ -120,6 +138,20 @@ rutas.forEach(r => {
   const color = colores[Math.max(0, Math.min(4, r.indice - 1))];
   L.polyline(r.puntos, { color, weight: 7, opacity: 0.85 }).addTo(map)
     .bindPopup('<b>' + r.nombre + '</b><br/>' + (r.descripcion || '') + '<br/>Riesgo ' + r.indice + '/5');
+});
+
+const alertas = ${JSON.stringify(alertasDatos)};
+alertas.forEach(a => {
+  bounds.extend([a.lat, a.lng]);
+  const icon = L.divIcon({
+    className: '',
+    html: '<div style="width:44px;height:44px;border-radius:50%;background:#D8125A;border:4px solid white;color:white;font-weight:900;display:flex;align-items:center;justify-content:center;font-family:sans-serif;box-shadow:0 0 0 10px rgba(216,18,90,0.25)">SOS</div>',
+    iconSize: [44, 44],
+    iconAnchor: [22, 22]
+  });
+  L.marker([a.lat, a.lng], { icon, zIndexOffset: 1000 }).addTo(map)
+    .bindPopup('<b>SOS de ' + a.nombre + '</b><br/>' + a.mensaje)
+    .on('click', () => window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'alerta', id: a.id })));
 });
 
 zonas.forEach(z => {
