@@ -159,4 +159,6 @@ Documentación específica:
 
 ---
 
-**Equipo MASI** · Oruro, Bolivia
+## Equipo
+
+**MASI** es el nombre de la aplicación. El equipo desarrollador es **Falta de Presupuesto** — Oruro, Bolivia.
