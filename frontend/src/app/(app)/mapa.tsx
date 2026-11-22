@@ -1,9 +1,10 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { Text } from '@/components/text';
 import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import type MapViewType from 'react-native-maps';
 
 import { Badge, Button, Card } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
@@ -25,6 +26,7 @@ export default function MapaScreen() {
   const [formError, setFormError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
   const esAdmin = profile?.rol === 'admin';
+  const mapRef = useRef<MapViewType | null>(null);
   // Carga diferida para no evaluar codegenNativeComponent en react-native-web.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const maps = Platform.OS === 'web' ? null : (require('react-native-maps') as typeof import('react-native-maps'));
@@ -33,9 +35,24 @@ export default function MapaScreen() {
 
   useFocusEffect(useCallback(() => { void cargar(); }, [cargar]));
 
+  useEffect(() => {
+    if (location && mapRef.current) {
+      mapRef.current.animateToRegion(
+        { latitude: location.latitude, longitude: location.longitude, latitudeDelta: 0.04, longitudeDelta: 0.04 },
+        800,
+      );
+    }
+  }, [location]);
+
   async function ubicarme() {
     const res = await obtenerPosicion();
-    if (res.location) setForm((f) => ({ ...f, latitud: String(res.location!.latitude), longitud: String(res.location!.longitude) }));
+    if (res.location) {
+      setForm((f) => ({ ...f, latitud: String(res.location!.latitude), longitud: String(res.location!.longitude) }));
+      mapRef.current?.animateToRegion(
+        { latitude: res.location.latitude, longitude: res.location.longitude, latitudeDelta: 0.04, longitudeDelta: 0.04 },
+        800,
+      );
+    }
   }
 
   async function guardarZona() {
@@ -68,7 +85,15 @@ export default function MapaScreen() {
 
   return (
     <View style={styles.root}>
-      <MapView style={StyleSheet.absoluteFill} initialRegion={region} region={region}>
+      <MapView
+        ref={mapRef}
+        style={StyleSheet.absoluteFill}
+        initialRegion={region}
+        showsUserLocation
+        showsCompass
+        zoomEnabled
+        scrollEnabled
+        rotateEnabled>
         {location ? (
           <Marker coordinate={{ latitude: location.latitude, longitude: location.longitude }} title="Tu ubicación">
             <View style={styles.yo}><Ionicons name="person" size={20} color={Palette.surface} /></View>
