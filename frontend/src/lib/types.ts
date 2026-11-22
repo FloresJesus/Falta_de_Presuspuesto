@@ -81,6 +81,21 @@ export interface AlertaSOS {
   contacto?: ContactoConfianza | null;
 }
 
+export interface ZonaPeligro {
+  id: string;
+  nombre: string;
+  descripcion: string | null;
+  latitud: number;
+  longitud: number;
+  radio_m: number;
+  indice_peligro: number;
+  tipo: 'zona' | 'alerta' | 'inundacion' | 'obras' | 'otro';
+  activo: boolean;
+  creado_por: string | null;
+  creado_en: string;
+  actualizado_en: string;
+}
+
 export interface Institucion {
   id: string;
   nombre: string;

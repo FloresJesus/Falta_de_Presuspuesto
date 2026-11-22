@@ -1,99 +1,173 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useCallback, useState } from 'react';
+import { Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { Text } from '@/components/text';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import MapView, { Circle, Marker } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { MascotAvatar } from '@/components/ui';
+import { Badge, Button, Card } from '@/components/ui';
 import { MapCanvas } from '@/components/MapCanvas';
-import { useSesion } from '@/hooks/useSesion';
-import { useUbicacion } from '@/hooks/useUbicacion';
 import { useAuth } from '@/context/AuthContext';
+import { useUbicacion } from '@/hooks/useUbicacion';
+import { useZonasPeligro } from '@/hooks/useZonasPeligro';
+import type { ZonaPeligro } from '@/lib/types';
 import { Palette, Radius, Shadows } from '@/constants/theme';
 
-function horaActual() {
-  try {
-    return new Date().toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit', hour12: false });
-  } catch {
-    return '14:30';
-  }
-}
+const ORURO = { latitude: -17.7833, longitude: -67.1333, latitudeDelta: 0.09, longitudeDelta: 0.09 };
+const COLORES = ['#2E9E5B', '#D9A400', '#E87A1F', '#E23B3B', '#8E1B2E'];
 
 export default function MapaScreen() {
   const { profile } = useAuth();
-  const { sesion } = useSesion();
-  const { location } = useUbicacion();
+  const { location, obtenerPosicion } = useUbicacion();
+  const { zonas, error, cargar, crear, desactivar } = useZonasPeligro();
+  const [seleccion, setSeleccion] = useState<ZonaPeligro | null>(null);
+  const [formVisible, setFormVisible] = useState(false);
+  const [form, setForm] = useState({ nombre: '', descripcion: '', latitud: '', longitud: '', radio: '300', indice: '3', tipo: 'zona' as ZonaPeligro['tipo'] });
+  const [formError, setFormError] = useState<string | null>(null);
+  const [guardando, setGuardando] = useState(false);
+  const esAdmin = profile?.rol === 'admin';
 
-  const compartiendo = Boolean(sesion && sesion.compartir_ubicacion);
-  const nombre = (profile?.nombre ?? 'María').trim().split(/\s+/)[0];
+  useFocusEffect(useCallback(() => { void cargar(); }, [cargar]));
+
+  async function ubicarme() {
+    const res = await obtenerPosicion();
+    if (res.location) setForm((f) => ({ ...f, latitud: String(res.location!.latitude), longitud: String(res.location!.longitude) }));
+  }
+
+  async function guardarZona() {
+    setFormError(null);
+    const lat = Number(form.latitud);
+    const lng = Number(form.longitud);
+    if (form.nombre.trim().length < 2) return setFormError('Escribe un nombre para la zona.');
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return setFormError('Ingresa coordenadas válidas.');
+    setGuardando(true);
+    const res = await crear({
+      nombre: form.nombre,
+      descripcion: form.descripcion,
+      latitud: lat,
+      longitud: lng,
+      radio_m: Number(form.radio),
+      indice_peligro: Number(form.indice),
+      tipo: form.tipo,
+    });
+    setGuardando(false);
+    if (res.error) return setFormError(res.error);
+    setFormVisible(false);
+  }
+
+  const region = location
+    ? { latitude: location.latitude, longitude: location.longitude, latitudeDelta: 0.05, longitudeDelta: 0.05 }
+    : ORURO;
 
   return (
     <View style={styles.root}>
-      <View style={StyleSheet.absoluteFill}>
-        <MapCanvas
-          latitude={location?.latitude ?? null}
-          longitude={location?.longitude ?? null}
-          status={compartiendo ? 'sharing' : 'idle'}
-          markers={false}
-        />
-      </View>
-
-      <View style={styles.markerWrap} pointerEvents="none">
-        <View style={styles.radius} />
-        <View style={styles.avatarRing}>
-          <MascotAvatar size={64} />
+      {Platform.OS === 'web' ? (
+        <View style={StyleSheet.absoluteFill}>
+          <MapCanvas latitude={region.latitude} longitude={region.longitude} status="idle" markers />
         </View>
-        <View style={styles.dot} />
-      </View>
+      ) : (
+        <MapView style={StyleSheet.absoluteFill} initialRegion={region} region={region}>
+          {location ? (
+            <Marker coordinate={{ latitude: location.latitude, longitude: location.longitude }} title="Tu ubicación">
+              <View style={styles.yo}><Ionicons name="person" size={20} color={Palette.surface} /></View>
+            </Marker>
+          ) : null}
+          {zonas.map((z) => (
+            <Marker
+              key={z.id}
+              coordinate={{ latitude: z.latitud, longitude: z.longitud }}
+              title={z.nombre}
+              description={`Índice ${z.indice_peligro}/5`}
+              onPress={() => setSeleccion(z)}>
+              <View style={[styles.pin, { backgroundColor: COLORES[z.indice_peligro - 1] }]}>
+                <Text style={styles.pinText}>{z.indice_peligro}</Text>
+              </View>
+            </Marker>
+          ))}
+          {zonas.map((z) => (
+            <Circle
+              key={`radio-${z.id}`}
+              center={{ latitude: z.latitud, longitude: z.longitud }}
+              radius={z.radio_m}
+              fillColor={`${COLORES[z.indice_peligro - 1]}22`}
+              strokeColor={`${COLORES[z.indice_peligro - 1]}88`}
+              strokeWidth={2}
+            />
+          ))}
+        </MapView>
+      )}
 
       <SafeAreaView style={styles.safe} edges={['top']} pointerEvents="box-none">
         <View style={styles.header}>
           <Pressable onPress={() => router.replace('/inicio')} style={styles.circleBtn}>
             <Ionicons name="arrow-back" size={22} color={Palette.purple} />
           </Pressable>
-          <Text style={styles.headerTitle}>Mapa</Text>
-          <Pressable onPress={() => router.push('/ajustes')} style={styles.circleBtn}>
-            <Ionicons name="settings-outline" size={22} color={Palette.purple} />
-          </Pressable>
-        </View>
-
-        <View style={styles.onlineCard}>
-          <View style={styles.onlineDot} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.onlineTitle}>En línea</Text>
-            <Text style={styles.onlineSub}>Última ubicación: {horaActual()}</Text>
-          </View>
-        </View>
-
-        <View style={styles.mapButtons}>
-          <Pressable style={styles.mapBtn} onPress={() => router.push('/compartir')}>
-            <Ionicons name="navigate-outline" size={22} color={Palette.purple} />
-          </Pressable>
-          <Pressable style={styles.mapBtn} onPress={() => router.push('/mapa')}>
+          <Text style={styles.headerTitle}>Mapa de Oruro</Text>
+          <Pressable onPress={() => void ubicarme()} style={styles.circleBtn}>
             <Ionicons name="locate-outline" size={22} color={Palette.purple} />
           </Pressable>
         </View>
+
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+
+        {seleccion ? (
+          <Card style={styles.detalle}>
+            <View style={styles.detalleTop}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.detalleTitle}>{seleccion.nombre}</Text>
+                <Text style={styles.detalleSub}>{seleccion.descripcion ?? 'Sin descripción'}</Text>
+              </View>
+              <Badge variant={seleccion.indice_peligro >= 4 ? 'warning' : 'neutral'}>Riesgo {seleccion.indice_peligro}/5</Badge>
+            </View>
+            <Text style={styles.detalleMeta}>Radio: {seleccion.radio_m} m · {seleccion.tipo}</Text>
+            {esAdmin ? (
+              <Pressable onPress={() => void desactivar(seleccion.id).then(() => setSeleccion(null))} style={styles.borrar}>
+                <Text style={styles.borrarText}>Desactivar zona</Text>
+              </Pressable>
+            ) : null}
+          </Card>
+        ) : null}
       </SafeAreaView>
 
-      <View style={styles.bottomCard}>
-        <View style={styles.personRow}>
-          <MascotAvatar size={48} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.personName}>{nombre}</Text>
-            <Text style={styles.personSub}>
-              <Text style={{ color: Palette.pink }}>• </Text>
-              {compartiendo ? 'Compartiendo ubicación' : 'Ubicación no compartida'}
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={Palette.purple} />
-        </View>
-        <View style={styles.divider} />
-        <Pressable style={styles.contactRow} onPress={() => router.push('/contactos')}>
-          <Ionicons name="people-outline" size={22} color={Palette.purple} />
-          <Text style={styles.contactText}>Tu contacto de confianza</Text>
-          <Ionicons name="chevron-forward" size={20} color={Palette.purple} />
+      {esAdmin ? (
+        <Pressable onPress={() => setFormVisible(true)} style={styles.fab}>
+          <Ionicons name="add" size={28} color={Palette.surface} />
         </Pressable>
-      </View>
+      ) : null}
+
+      <Modal visible={formVisible} animationType="slide" onRequestClose={() => setFormVisible(false)}>
+        <SafeAreaView style={styles.modal}>
+          <ScrollView contentContainerStyle={styles.modalBody}>
+            <Text style={styles.modalTitle}>Nueva zona de peligro</Text>
+            <TextInput style={styles.input} placeholder="Nombre" value={form.nombre} onChangeText={(v) => setForm({ ...form, nombre: v })} />
+            <TextInput style={styles.input} placeholder="Descripción" value={form.descripcion} onChangeText={(v) => setForm({ ...form, descripcion: v })} />
+            <View style={styles.row}>
+              <TextInput style={[styles.input, styles.half]} placeholder="Latitud" keyboardType="numeric" value={form.latitud} onChangeText={(v) => setForm({ ...form, latitud: v })} />
+              <TextInput style={[styles.input, styles.half]} placeholder="Longitud" keyboardType="numeric" value={form.longitud} onChangeText={(v) => setForm({ ...form, longitud: v })} />
+            </View>
+            <Pressable onPress={() => void ubicarme()} style={styles.usarUbicacion}>
+              <Ionicons name="locate-outline" size={16} color={Palette.purple} />
+              <Text style={styles.usarUbicacionText}>Usar mi ubicación actual</Text>
+            </Pressable>
+            <View style={styles.row}>
+              <TextInput style={[styles.input, styles.half]} placeholder="Radio (m)" keyboardType="numeric" value={form.radio} onChangeText={(v) => setForm({ ...form, radio: v })} />
+              <TextInput style={[styles.input, styles.half]} placeholder="Índice 1-5" keyboardType="numeric" value={form.indice} onChangeText={(v) => setForm({ ...form, indice: v })} />
+            </View>
+            <Text style={styles.label}>Tipo</Text>
+            <View style={styles.chips}>
+              {(['zona', 'alerta', 'inundacion', 'obras', 'otro'] as const).map((t) => (
+                <Pressable key={t} onPress={() => setForm({ ...form, tipo: t })} style={[styles.chip, form.tipo === t && styles.chipOn]}>
+                  <Text style={[styles.chipText, form.tipo === t && styles.chipTextOn]}>{t}</Text>
+                </Pressable>
+              ))}
+            </View>
+            {formError ? <Text style={styles.error}>{formError}</Text> : null}
+            <Button title="Guardar zona" onPress={() => void guardarZona()} loading={guardando} fullWidth />
+            <Button title="Cancelar" variant="ghost" onPress={() => setFormVisible(false)} fullWidth />
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
     </View>
   );
 }
@@ -101,13 +175,7 @@ export default function MapaScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#EDE0F4' },
   safe: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-  },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 8 },
   circleBtn: {
     width: 46,
     height: 46,
@@ -117,89 +185,68 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     ...(Shadows.card ?? {}),
   },
-  headerTitle: { fontSize: 21, fontWeight: '800', color: Palette.purple, letterSpacing: -0.3 },
-  onlineCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: Palette.surface,
-    borderRadius: Radius.lg,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-    marginHorizontal: 20,
-    marginTop: 14,
-    width: 210,
-    ...(Shadows.card ?? {}),
-  },
-  onlineDot: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: 'rgba(46,191,112,0.20)',
-    borderWidth: 6,
-    borderColor: Palette.success,
-  },
-  onlineTitle: { fontSize: 15, fontWeight: '800', color: Palette.success },
-  onlineSub: { fontSize: 12, fontWeight: '600', color: Palette.muted, marginTop: 2 },
-  markerWrap: {
-    position: 'absolute',
-    top: '27%',
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
-  radius: {
-    position: 'absolute',
-    top: -20,
-    width: 250,
-    height: 250,
-    borderRadius: 125,
-    backgroundColor: 'rgba(178,132,214,0.30)',
-    borderWidth: 2,
-    borderColor: '#C9A3E0',
-  },
-  avatarRing: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
-    backgroundColor: Palette.surface,
+  headerTitle: { fontSize: 20, fontWeight: '800', color: Palette.purple },
+  error: { color: Palette.danger, fontWeight: '700', marginHorizontal: 20, marginTop: 8 },
+  yo: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Palette.purple,
     alignItems: 'center',
     justifyContent: 'center',
-    ...(Shadows.card ?? {}),
+    borderWidth: 3,
+    borderColor: Palette.surface,
   },
-  dot: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: Palette.surface,
-    borderWidth: 5,
-    borderColor: Palette.purple,
-    marginTop: 32,
-  },
-  mapButtons: { position: 'absolute', right: 20, top: '43%', gap: 12 },
-  mapBtn: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: '#E4CBF0',
+  pin: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
-    ...(Shadows.card ?? {}),
+    borderWidth: 3,
+    borderColor: Palette.surface,
   },
-  bottomCard: {
+  pinText: { color: Palette.surface, fontWeight: '800', fontSize: 15 },
+  detalle: { marginHorizontal: 20, marginTop: 12, gap: 8 },
+  detalleTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  detalleTitle: { fontSize: 17, fontWeight: '800', color: Palette.purpleDeep },
+  detalleSub: { fontSize: 13, fontWeight: '600', color: Palette.muted, marginTop: 2 },
+  detalleMeta: { fontSize: 12, fontWeight: '700', color: Palette.mutedStrong },
+  borrar: { alignSelf: 'flex-start', paddingVertical: 6 },
+  borrarText: { color: Palette.danger, fontWeight: '800', fontSize: 13 },
+  fab: {
     position: 'absolute',
-    left: 20,
     right: 20,
-    bottom: 98,
-    backgroundColor: Palette.surface,
-    borderRadius: Radius.xxl,
-    padding: 12,
+    bottom: 120,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: Palette.purple,
+    alignItems: 'center',
+    justifyContent: 'center',
     ...(Shadows.floating ?? {}),
   },
-  personRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  personName: { fontSize: 18, fontWeight: '800', color: Palette.purple },
-  personSub: { fontSize: 13, fontWeight: '600', color: Palette.purple, marginTop: 3 },
-  divider: { height: 1, backgroundColor: Palette.border, marginVertical: 10 },
-  contactRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  contactText: { flex: 1, fontSize: 15, fontWeight: '800', color: Palette.purple },
+  modal: { flex: 1, backgroundColor: Palette.background },
+  modalBody: { padding: 20, gap: 12 },
+  modalTitle: { fontSize: 22, fontWeight: '800', color: Palette.purple },
+  input: {
+    backgroundColor: Palette.surface,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Palette.border,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 14,
+    color: Palette.ink,
+  },
+  row: { flexDirection: 'row', gap: 10 },
+  half: { flex: 1 },
+  label: { fontSize: 13, fontWeight: '800', color: Palette.purpleDeep },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: Radius.pill, borderWidth: 1, borderColor: Palette.border },
+  chipOn: { backgroundColor: Palette.purple, borderColor: Palette.purple },
+  chipText: { fontSize: 12, fontWeight: '700', color: Palette.mutedStrong },
+  chipTextOn: { color: Palette.surface },
+  usarUbicacion: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start' },
+  usarUbicacionText: { fontSize: 13, fontWeight: '800', color: Palette.purple },
 });
