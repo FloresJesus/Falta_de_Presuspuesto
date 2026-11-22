@@ -161,4 +161,4 @@ Documentación específica:
 
 ## Equipo
 
-**MASI** es el nombre de la aplicación. El equipo desarrollador es **Falta de Presupuesto** — Oruro, Bolivia.
+Equipo Falta de Presupuesto
