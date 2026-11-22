@@ -13,6 +13,7 @@ const MapaWebView = WebView as unknown as React.ComponentType<{
   style?: object;
   javaScriptEnabled?: boolean;
   domStorageEnabled?: boolean;
+  onLoadEnd?: () => void;
   onMessage?: (event: { nativeEvent: { data: string } }) => void;
 }>;
 
@@ -36,12 +37,17 @@ export function MapaOSM({
   const [inicial] = useState(center);
   const html = useMemo(() => buildHtml(zonas, rutas, inicial), [zonas, rutas, inicial]);
 
-  useEffect(() => {
+  function marcarMiUbicacion() {
     if (userLocation && webRef?.current) {
       webRef.current.injectJavaScript(
         `window.miUbicacion && window.miUbicacion(${userLocation.latitude}, ${userLocation.longitude}); true;`,
       );
     }
+  }
+
+  useEffect(() => {
+    marcarMiUbicacion();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userLocation, webRef]);
 
   return (
@@ -52,6 +58,7 @@ export function MapaOSM({
       style={styles.web}
       javaScriptEnabled
       domStorageEnabled
+      onLoadEnd={marcarMiUbicacion}
       onMessage={(event) => {
         try {
           const data = JSON.parse(event.nativeEvent.data) as { type: string; id?: string; lat?: number; lng?: number };
