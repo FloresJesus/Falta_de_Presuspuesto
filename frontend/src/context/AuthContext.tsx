@@ -37,17 +37,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) return;
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      if (data.session?.user) {
-        void fetchProfile(data.session.user.id);
-      } else {
+    // Si el almacenamiento/local o la red se traban, no dejamos la app en loading forever.
+    const fallo = setTimeout(() => {
+      if (mounted) setLoading(false);
+    }, 4000);
+
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (!mounted) return;
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
+        if (data.session?.user) {
+          void fetchProfile(data.session.user.id);
+        } else {
+          setProfile(null);
+        }
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setSession(null);
+        setUser(null);
         setProfile(null);
-      }
-      setLoading(false);
-    });
+      })
+      .finally(() => {
+        clearTimeout(fallo);
+        if (mounted) setLoading(false);
+      });
 
     const {
       data: { subscription },

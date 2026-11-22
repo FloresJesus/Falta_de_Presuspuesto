@@ -29,6 +29,8 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (fontsLoaded) void SplashScreen.hideAsync();
+    const fallo = setTimeout(() => void SplashScreen.hideAsync(), 4000);
+    return () => clearTimeout(fallo);
   }, [fontsLoaded]);
 
   // La app solo tiene diseño claro: evita que el navegador aplique "modo
@@ -38,8 +40,6 @@ export default function RootLayout() {
       document.documentElement.style.colorScheme = 'light';
     }
   }, []);
-
-  if (!fontsLoaded) return null;
 
   return (
     <AuthProvider>
