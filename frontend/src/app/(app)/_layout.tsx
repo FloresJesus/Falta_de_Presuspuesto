@@ -3,10 +3,12 @@ import { Redirect, Tabs } from 'expo-router';
 import { AppTabBar } from '@/components/app-tab-bar';
 import { useAuth } from '@/context/AuthContext';
 import { useNotificacionesPush } from '@/hooks/useNotificacionesPush';
+import { useSosNotifications } from '@/hooks/useSosNotifications';
 
 export default function AppGroupLayout() {
   const { session, loading } = useAuth();
   useNotificacionesPush();
+  useSosNotifications();
 
   if (!loading && !session) {
     return <Redirect href="/welcome" />;
