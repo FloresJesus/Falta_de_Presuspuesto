@@ -107,13 +107,16 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap'
 }).addTo(map);
 const rutas = ${JSON.stringify(rutasDatos)};
+const bounds = L.latLngBounds([]);
 rutas.forEach(r => {
+  r.puntos.forEach(p => bounds.extend(p));
   const color = colores[Math.max(0, Math.min(4, r.indice - 1))];
   L.polyline(r.puntos, { color, weight: 7, opacity: 0.85 }).addTo(map)
     .bindPopup('<b>' + r.nombre + '</b><br/>' + (r.descripcion || '') + '<br/>Riesgo ' + r.indice + '/5');
 });
 
 zonas.forEach(z => {
+  bounds.extend([z.lat, z.lng]);
   const color = colores[Math.max(0, Math.min(4, z.indice - 1))];
   L.circle([z.lat, z.lng], { radius: z.radio, color, fillColor: color, fillOpacity: 0.15, weight: 2 }).addTo(map);
   const icon = L.divIcon({
@@ -126,6 +129,8 @@ zonas.forEach(z => {
     .bindPopup('<b>' + z.nombre + '</b><br/>' + (z.descripcion || '') + '<br/>Riesgo ' + z.indice + '/5')
     .on('click', () => window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'zona', id: z.id })));
 });
+if (bounds.isValid()) map.fitBounds(bounds.pad(0.18));
+
 let yo = null;
 window.miUbicacion = (lat, lng) => {
   if (yo) { yo.setLatLng([lat, lng]); }
@@ -133,7 +138,8 @@ window.miUbicacion = (lat, lng) => {
     const icon = L.divIcon({ className: '', html: '<div style="width:22px;height:22px;border-radius:50%;background:#2F80ED;border:4px solid white;box-shadow:0 0 0 6px rgba(47,128,237,0.25)"></div>', iconSize: [22, 22], iconAnchor: [11, 11] });
     yo = L.marker([lat, lng], { icon }).addTo(map).bindPopup('Estás aquí');
   }
-  map.setView([lat, lng], Math.max(map.getZoom(), 15));
+  bounds.extend([lat, lng]);
+  if (bounds.isValid()) map.fitBounds(bounds.pad(0.18));
 };
 window.moverMapa = (lat, lng) => { map.setView([lat, lng], 16); };
 map.on('click', (e) => window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'mapa', lat: e.latlng.lat, lng: e.latlng.lng })));

@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     ...(Shadows.card ?? {}),
   },
-  headerTitle: { fontSize: 20, fontWeight: '800', color: Palette.purple },
+  headerTitle: { flex: 1, textAlign: 'center', fontSize: 20, fontWeight: '800', color: Palette.purple },
   error: { color: Palette.danger, fontWeight: '700', marginHorizontal: 20, marginTop: 8 },
   leyenda: {
     alignSelf: 'flex-start',
