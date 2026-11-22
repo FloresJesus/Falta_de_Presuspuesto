@@ -56,6 +56,9 @@ export default function MasScreen() {
             )
           }
         />
+        {profile?.rol === 'admin' ? (
+          <MenuRow icon="shield-checkmark-outline" label="Registro FELCC" onPress={() => router.push('/registro-felcc')} />
+        ) : null}
         <MenuRow icon="globe-outline" label="Idioma" right={<Text style={styles.idioma}>Español</Text>} last />
       </View>
 

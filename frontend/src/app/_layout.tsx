@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
+import { useKeepAwake } from 'expo-keep-awake';
 
 import { AuthProvider } from '@/context/AuthContext';
 import { SosProvider } from '@/context/SosContext';
@@ -14,6 +15,10 @@ import '@/tasks/ubicacion';
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  // Mantiene la pantalla encendida en toda la app: evita el bloqueo y que se
+  // apague el salvapantallas mientras la aplicación está abierta.
+  useKeepAwake();
+
   const [fontsLoaded] = useFonts({
     Poppins_400Regular: require('@/assets/fonts/Poppins-Regular.ttf'),
     Poppins_500Medium: require('@/assets/fonts/Poppins-Medium.ttf'),
@@ -60,6 +65,7 @@ export default function RootLayout() {
         <Stack.Screen name="compartir" options={{ headerShown: false }} />
         <Stack.Screen name="seguimiento/[token]" options={{ headerShown: false }} />
         <Stack.Screen name="alerta-sos/[id]" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'fade' }} />
+        <Stack.Screen name="registro-felcc" options={{ headerShown: false }} />
       </Stack>
       </SosProvider>
     </AuthProvider>
