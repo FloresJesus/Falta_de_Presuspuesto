@@ -40,27 +40,16 @@ export function useAlertas() {
         p_longitud: longitud ?? null,
         p_mensaje: mensaje ?? null,
       });
-      if (error) return { error: error.message };
+      if (error) {
+        setError(error.message);
+        return { error: error.message };
+      }
       const d = data as Record<string, unknown> | null;
-      const alerta = {
-        id: String(d?.alerta_id ?? ''),
-        usuaria_id: user?.id ?? '',
-        sesion_id: sesionId ?? null,
-        contacto_id: null,
-        latitud: latitud ?? null,
-        longitud: longitud ?? null,
-        mensaje: String(d?.mensaje ?? 'Alerta SOS enviada'),
-        estado: 'enviada' as const,
-        es_simulacion: true,
-        creada_en: String(d?.creada_en ?? new Date().toISOString()),
-        actualizado_en: new Date().toISOString(),
-        contacto: null,
-      };
-      void alerta;
+      setError(null);
       await cargar();
-      return { data };
+      return { data, alertaId: String(d?.alerta_id ?? '') };
     },
-    [cargar, user],
+    [cargar],
   );
 
   const actualizarEstado = useCallback(

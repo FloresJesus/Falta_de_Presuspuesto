@@ -8,7 +8,9 @@ import { Mascot, MascotAvatar } from '@/components/ui';
 import { useContactos } from '@/hooks/useContactos';
 import { useSesion } from '@/hooks/useSesion';
 import { useAuth } from '@/context/AuthContext';
+import { useSos } from '@/context/SosContext';
 import { useSolicitudes } from '@/hooks/useSolicitudes';
+import { useAlertasRecibidas } from '@/hooks/useAlertasRecibidas';
 import { Palette, Radius, Shadows } from '@/constants/theme';
 
 export default function InicioScreen() {
@@ -16,6 +18,9 @@ export default function InicioScreen() {
   const { sesion, contacto } = useSesion();
   const { contactos } = useContactos();
   const { pendientesEntrantes, cargar: cargarSolicitudes } = useSolicitudes();
+  const { alertas: sosRecibidas } = useAlertasRecibidas();
+  const { estado: sos, cancelarSos } = useSos();
+  const totalNotificaciones = pendientesEntrantes + sosRecibidas.length;
 
   useFocusEffect(
     useCallback(() => {
@@ -40,15 +45,32 @@ export default function InicioScreen() {
           onPress={() => router.push('/contactos/solicitudes')}
           style={({ pressed }) => [styles.bell, pressed && { opacity: 0.75 }]}>
           <Ionicons name="notifications-outline" size={20} color={Palette.purple} />
-          {pendientesEntrantes > 0 ? (
+          {totalNotificaciones > 0 ? (
             <View style={styles.bellBadge}>
               <Text style={styles.bellBadgeText}>
-                {pendientesEntrantes > 9 ? '9+' : pendientesEntrantes}
+                {totalNotificaciones > 9 ? '9+' : totalNotificaciones}
               </Text>
             </View>
           ) : null}
         </Pressable>
       </View>
+
+      {sosRecibidas.length > 0 ? (
+        <Pressable
+          onPress={() => router.push(`/alerta-sos/${sosRecibidas[0].id}`)}
+          style={({ pressed }) => [styles.sosRecibidoBanner, pressed && { opacity: 0.94 }]}>
+          <Ionicons name="warning" size={22} color={Palette.danger} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.sosRecibidoTitle}>
+              {sosRecibidas.length === 1
+                ? `Alerta SOS de ${sosRecibidas[0].nombre_usuaria}`
+                : `Tienes ${sosRecibidas.length} alertas SOS`}
+            </Text>
+            <Text style={styles.bannerText}>Abre para ver su ubicación y llamarla.</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={Palette.danger} />
+        </Pressable>
+      ) : null}
 
       {pendientesEntrantes > 0 ? (
         <Pressable
@@ -65,6 +87,19 @@ export default function InicioScreen() {
           </View>
           <Ionicons name="chevron-forward" size={20} color={Palette.purple} />
         </Pressable>
+      ) : null}
+
+      {sos.activo ? (
+        <View style={styles.sosActivoBanner}>
+          <Ionicons name="warning" size={20} color={Palette.danger} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.sosActivoTitle}>Alerta SOS activa</Text>
+            <Text style={styles.sosActivoText}>Tu ubicación se está compartiendo con {acompanante ?? 'tu contacto'}.</Text>
+          </View>
+          <Pressable onPress={() => void cancelarSos()} style={styles.sosCancelLink}>
+            <Text style={styles.sosCancelText}>Cancelar</Text>
+          </Pressable>
+        </View>
       ) : null}
 
       <Pressable onPress={() => router.push('/mapa')} style={({ pressed }) => [styles.statusCard, pressed && { opacity: 0.94 }]}>
@@ -86,7 +121,13 @@ export default function InicioScreen() {
 
       <View style={styles.grid}>
         <QuickCard icon="location-outline" label="Compartir ubicación" color={Palette.pink} onPress={() => router.push('/compartir')} />
-        <QuickCard icon="warning-outline" label="Enviar SOS" color={Palette.pink} onPress={() => router.push('/sos')} />
+        <QuickCard
+          icon="warning-outline"
+          label="Enviar SOS"
+          color={Palette.pink}
+          onPress={() => router.push('/sos')}
+          counter={null}
+        />
         <QuickCard icon="book-outline" label="Aprender" color={Palette.purple} onPress={() => router.push('/educacion')} />
         <QuickCard icon="people-outline" label="Mis contactos" color={Palette.purple} onPress={() => router.push('/contactos')} />
       </View>
@@ -110,16 +151,29 @@ function QuickCard({
   label,
   color,
   onPress,
+  counter,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   color: string;
   onPress: () => void;
+  counter?: number | null;
 }) {
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.quickCard, pressed && { transform: [{ scale: 0.98 }], opacity: 0.94 }]}>
-      <Ionicons name={icon} size={34} color={color} />
-      <Text style={styles.quickLabel}>{label}</Text>
+      {counter != null ? (
+        <>
+          <View style={[styles.sosCountRing, { borderColor: color }]}>
+            <Text style={[styles.sosCount, { color }]}>{counter}</Text>
+          </View>
+          <Text style={[styles.quickLabel, { color }]}>Toca para cancelar</Text>
+        </>
+      ) : (
+        <>
+          <Ionicons name={icon} size={34} color={color} />
+          <Text style={styles.quickLabel}>{label}</Text>
+        </>
+      )}
     </Pressable>
   );
 }
@@ -152,6 +206,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   bellBadgeText: { color: Palette.surface, fontSize: 10, fontWeight: '800' },
+  sosRecibidoBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#FDE7EC',
+    borderRadius: Radius.xl,
+    padding: 12,
+    marginBottom: 10,
+  },
+  sosRecibidoTitle: { fontSize: 14, fontWeight: '800', color: Palette.danger },
   solicitudesBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -197,6 +261,28 @@ const styles = StyleSheet.create({
     ...(Shadows.card ?? {}),
   },
   quickLabel: { fontSize: 12, fontWeight: '600', color: Palette.purple, textAlign: 'center' },
+  sosCountRing: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sosCount: { fontSize: 22, fontWeight: '800' },
+  sosActivoBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#FDE7EC',
+    borderRadius: Radius.xl,
+    padding: 12,
+    marginBottom: 10,
+  },
+  sosActivoTitle: { fontSize: 14, fontWeight: '800', color: Palette.danger },
+  sosActivoText: { fontSize: 12, fontWeight: '600', color: Palette.muted, marginTop: 2 },
+  sosCancelLink: { paddingVertical: 6, paddingLeft: 6 },
+  sosCancelText: { fontSize: 12, fontWeight: '800', color: Palette.danger },
   reminder: {
     flexDirection: 'row',
     alignItems: 'center',

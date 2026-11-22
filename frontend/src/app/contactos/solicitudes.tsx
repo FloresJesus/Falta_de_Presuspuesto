@@ -2,9 +2,11 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from '@/components/text';
 import { router, useFocusEffect } from 'expo-router';
+import * as Linking from 'expo-linking';
 import { Ionicons } from '@expo/vector-icons';
 
 import { Avatar, Badge, Button, Card, EmptyState } from '@/components/ui';
+import { useAlertasRecibidas } from '@/hooks/useAlertasRecibidas';
 import { useSolicitudes } from '@/hooks/useSolicitudes';
 import type { EstadoSolicitudContacto, SolicitudContacto } from '@/lib/types';
 import { Palette, Radius } from '@/constants/theme';
@@ -31,13 +33,15 @@ function fechaCorta(iso: string) {
 
 export default function SolicitudesScreen() {
   const { entrantes, salientes, loading, error, cargar, responder, cancelar } = useSolicitudes();
+  const { alertas: sosAlertas, cargar: cargarSos } = useAlertasRecibidas();
   const [accionId, setAccionId] = useState<string | null>(null);
   const [accionError, setAccionError] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
       void cargar();
-    }, [cargar]),
+      void cargarSos();
+    }, [cargar, cargarSos]),
   );
 
   async function responderSolicitud(solicitud: SolicitudContacto, aceptar: boolean) {
@@ -72,7 +76,64 @@ export default function SolicitudesScreen() {
       {error || accionError ? <Text style={styles.error}>{accionError ?? error}</Text> : null}
       {loading ? <Text style={styles.loading}>Cargando solicitudes...</Text> : null}
 
-      <Text style={styles.sectionTitle}>Para ti {entrantes.length > 0 ? `(${entrantes.length})` : ''}</Text>
+      <Text style={styles.sectionTitle}>Alertas SOS recibidas {sosAlertas.length > 0 ? `(${sosAlertas.length})` : ''}</Text>
+      {sosAlertas.length === 0 && !loading ? (
+        <Card style={styles.emptyCard}>
+          <EmptyState
+            icon={<Ionicons name="shield-checkmark-outline" size={30} color={Palette.danger} />}
+            title="Sin alertas SOS"
+            message="Aquí aparecerá la alerta de emergencia de tu contacto."
+          />
+        </Card>
+      ) : null}
+
+      {sosAlertas.map((alerta) => (
+        <Card key={alerta.id} style={styles.solicitudCard}>
+          <View style={styles.rowTop}>
+            <Avatar name={alerta.nombre_usuaria} size={46} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.name}>{alerta.nombre_usuaria}</Text>
+              <Text style={styles.detail}>{alerta.mensaje}</Text>
+            </View>
+            <Text style={styles.date}>{fechaCorta(alerta.creada_en)}</Text>
+          </View>
+          {alerta.latitud != null && alerta.longitud != null ? (
+            <View style={styles.infoBox}>
+              <View style={styles.infoRow}>
+                <Ionicons name="location-outline" size={15} color={Palette.muted} />
+                <Text style={styles.infoText}>
+                  Lat: {alerta.latitud.toFixed(4)} · Lng: {alerta.longitud.toFixed(4)}
+                </Text>
+              </View>
+            </View>
+          ) : null}
+          <View style={styles.actions}>
+            {alerta.token_seguimiento ? (
+              <View style={{ flex: 1 }}>
+                <Button
+                  title="Abrir alerta"
+                  size="sm"
+                  fullWidth
+                  onPress={() => router.push(`/alerta-sos/${alerta.id}`)}
+                />
+              </View>
+            ) : null}
+            {alerta.telefono_usuaria ? (
+              <View style={{ flex: 1 }}>
+                <Button
+                  title="Llamar"
+                  variant="outline"
+                  size="sm"
+                  fullWidth
+                  onPress={() => void Linking.openURL(`tel:${alerta.telefono_usuaria}`)}
+                />
+              </View>
+            ) : null}
+          </View>
+        </Card>
+      ))}
+
+      <Text style={[styles.sectionTitle, styles.sectionSpacing]}>Para ti {entrantes.length > 0 ? `(${entrantes.length})` : ''}</Text>
       {entrantes.length === 0 && !loading ? (
         <Card style={styles.emptyCard}>
           <EmptyState

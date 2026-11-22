@@ -5,7 +5,11 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
 
 import { AuthProvider } from '@/context/AuthContext';
+import { SosProvider } from '@/context/SosContext';
 import { Palette } from '@/constants/theme';
+
+// Registra la tarea de ubicación en segundo plano antes de cualquier navegación.
+import '@/tasks/ubicacion';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -34,6 +38,7 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
+      <SosProvider>
       <Stack
         screenOptions={{
           headerShown: false,
@@ -54,7 +59,9 @@ export default function RootLayout() {
         <Stack.Screen name="ajustes" options={{ headerShown: false }} />
         <Stack.Screen name="compartir" options={{ headerShown: false }} />
         <Stack.Screen name="seguimiento/[token]" options={{ headerShown: false }} />
+        <Stack.Screen name="alerta-sos/[id]" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'fade' }} />
       </Stack>
+      </SosProvider>
     </AuthProvider>
   );
 }

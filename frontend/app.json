@@ -9,7 +9,8 @@
     "userInterfaceStyle": "light",
     "ios": {
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "LÍA usa tu ubicación para compartir el acompañamiento con tu contacto de confianza."
+        "NSLocationWhenInUseUsageDescription": "LÍA usa tu ubicación para compartir el acompañamiento con tu contacto de confianza.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "LÍA necesita tu ubicación aunque la app esté en segundo plano para que tu contacto pueda encontrarte durante una emergencia."
       }
     },
     "android": {
@@ -22,6 +23,11 @@
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
+        "VIBRATE",
+        "WAKE_LOCK",
         "INTERNET"
       ]
     },
@@ -31,6 +37,14 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-location",
+        {
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ],
+      "expo-notifications",
       [
         "expo-splash-screen",
         {

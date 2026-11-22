@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as Location from 'expo-location';
+import * as TaskManager from 'expo-task-manager';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import { SESION_SOS_KEY, UBICACION_TASK } from '@/tasks/ubicacion';
 
 export type Ubicacion = {
   latitude: number;
@@ -95,5 +99,63 @@ export function useUbicacion() {
     };
   }, []);
 
-  return { status, location, loading, error, solicitarPermiso, obtenerPosicion, iniciarSeguimiento, detenerSeguimiento };
+  const iniciarSeguimientoBackground = useCallback(async (sesionId: string) => {
+    const foreground = await Location.requestForegroundPermissionsAsync();
+    if (foreground.status !== 'granted') return { error: 'Permiso de ubicación denegado' };
+
+    const background = await Location.requestBackgroundPermissionsAsync();
+    if (background.status !== 'granted') {
+      return { error: 'Activa el acceso a la ubicación en segundo plano para compartir tu SOS.' };
+    }
+
+    const start = (Location as unknown as { startLocationUpdatesAsync?: (...args: unknown[]) => Promise<void> })
+      .startLocationUpdatesAsync;
+    if (typeof start !== 'function') {
+      return { error: 'La ubicación en segundo plano requiere un development build.' };
+    }
+
+    await AsyncStorage.setItem(SESION_SOS_KEY, sesionId);
+    try {
+      await start(UBICACION_TASK, {
+        accuracy: Location.Accuracy.High,
+        distanceInterval: 10,
+        timeInterval: 5000,
+        showsBackgroundLocationIndicator: true,
+        pausesUpdatesAutomatically: false,
+        foregroundService: {
+          notificationTitle: 'LÍA · SOS activo',
+          notificationBody: 'Compartiendo tu ubicación con tu contacto de emergencia.',
+        },
+      });
+      return { error: null };
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : 'No se pudo iniciar la ubicación en segundo plano.' };
+    }
+  }, []);
+
+  const detenerSeguimientoBackground = useCallback(async () => {
+    await AsyncStorage.removeItem(SESION_SOS_KEY);
+    const stop = (Location as unknown as { stopLocationUpdatesAsync?: (name: string) => Promise<void> })
+      .stopLocationUpdatesAsync;
+    if (typeof stop !== 'function') return;
+    try {
+      const registrada = await TaskManager.isTaskRegisteredAsync(UBICACION_TASK);
+      if (registrada) await stop(UBICACION_TASK);
+    } catch {
+      // Expo Go no registra tareas de fondo; no hay nada que detener.
+    }
+  }, []);
+
+  return {
+    status,
+    location,
+    loading,
+    error,
+    solicitarPermiso,
+    obtenerPosicion,
+    iniciarSeguimiento,
+    detenerSeguimiento,
+    iniciarSeguimientoBackground,
+    detenerSeguimientoBackground,
+  };
 }

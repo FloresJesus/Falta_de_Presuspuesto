@@ -54,14 +54,16 @@ export function useSesion() {
 
   const iniciar = useCallback(
     async (contactoId: string, destino: string, compartirUbicacion: boolean) => {
-      if (!user) return { error: 'No hay sesión activa' };
+      if (!user) return { error: 'No hay sesión activa', sesionId: null, token: null };
       const { data, error } = await supabase.rpc('iniciar_acompanamiento', {
         p_contacto_id: contactoId,
         p_destino: destino.trim() ? destino.trim() : null,
         p_compartir_ubicacion: compartirUbicacion,
       });
-      if (error) return { error: error.message };
+      if (error) return { error: error.message, sesionId: null, token: null };
       const d = data as Record<string, unknown> | null;
+      const sesionId = d ? String(d.sesion_id ?? '') : null;
+      const token = d ? String(d.token_seguimiento ?? '') : null;
       if (d) {
         setSesion({
           id: String(d.sesion_id ?? ''),
@@ -70,7 +72,7 @@ export function useSesion() {
           estado: 'activa',
           compartir_ubicacion: Boolean(d.compartir_ubicacion ?? compartirUbicacion),
           token_seguimiento: String(d.token_seguimiento ?? ''),
-          destino: (d.destino as string | null) ?? destino.trim() ? destino.trim() : null,
+          destino: (d.destino as string | null) ?? (destino.trim() || null),
           iniciada_en: String(d.iniciada_en ?? new Date().toISOString()),
           finalizada_en: null,
           creado_en: new Date().toISOString(),
@@ -80,7 +82,7 @@ export function useSesion() {
         setContacto(null);
         await cargar();
       }
-      return { data };
+      return { data, sesionId, token };
     },
     [cargar, user],
   );

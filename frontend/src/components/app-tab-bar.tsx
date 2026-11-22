@@ -1,8 +1,10 @@
 import { Pressable, StyleSheet, View } from 'react-native';
+import { router } from 'expo-router';
 import { Text } from '@/components/text';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useAlertasRecibidas } from '@/hooks/useAlertasRecibidas';
 import { useSolicitudes } from '@/hooks/useSolicitudes';
 import { Palette, Shadows } from '@/constants/theme';
 
@@ -19,6 +21,8 @@ const META: Record<
 export function AppTabBar({ state, emitter, navigateToTab, navigation }: any) {
   const insets = useSafeAreaInsets();
   const { pendientesEntrantes } = useSolicitudes();
+  const { alertas: sosRecibidas } = useAlertasRecibidas();
+  const totalNotificaciones = pendientesEntrantes + sosRecibidas.length;
 
   function irA(route: any, focused: boolean) {
     if (emitter && navigateToTab) {
@@ -44,10 +48,10 @@ export function AppTabBar({ state, emitter, navigateToTab, navigation }: any) {
             style={({ pressed }) => [styles.item, pressed && { opacity: 0.7 }]}>
             <View style={styles.iconWrap}>
               <Ionicons name={focused ? meta.active : meta.inactive} size={24} color={focused ? Palette.pink : Palette.muted} />
-              {route.name === 'inicio' && pendientesEntrantes > 0 ? (
+              {route.name === 'inicio' && totalNotificaciones > 0 ? (
                 <View style={styles.tabBadge}>
                   <Text style={styles.tabBadgeText}>
-                    {pendientesEntrantes > 9 ? '9+' : pendientesEntrantes}
+                    {totalNotificaciones > 9 ? '9+' : totalNotificaciones}
                   </Text>
                 </View>
               ) : null}
@@ -56,6 +60,15 @@ export function AppTabBar({ state, emitter, navigateToTab, navigation }: any) {
           </Pressable>
         );
       })}
+
+      <Pressable
+        onPress={() => router.push('/sos')}
+        style={({ pressed }) => [styles.item, styles.sosItem, pressed && { opacity: 0.7 }]}>
+        <View style={styles.sosIconWrap}>
+          <Ionicons name="warning" size={24} color={Palette.surface} />
+        </View>
+        <Text style={styles.sosLabel}>SOS</Text>
+      </Pressable>
     </View>
   );
 }
@@ -92,4 +105,15 @@ const styles = StyleSheet.create({
   tabBadgeText: { color: Palette.surface, fontSize: 9, fontWeight: '800' },
   label: { fontSize: 10.5, fontWeight: '600', color: Palette.muted },
   labelActive: { color: Palette.pink, fontWeight: '700' },
+  sosItem: { justifyContent: 'center' },
+  sosIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: Palette.pink,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: -14,
+  },
+  sosLabel: { fontSize: 10.5, fontWeight: '800', color: Palette.pink },
 });

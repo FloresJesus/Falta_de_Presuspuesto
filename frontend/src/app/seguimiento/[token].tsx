@@ -29,21 +29,22 @@ export default function SeguimientoScreen() {
 
   useEffect(() => {
     let mounted = true;
-    async function cargar() {
+    async function cargar(inicial = false) {
       const { data: res, error: err } = await supabase.rpc('ubicacion_publica', { p_token: token });
       if (!mounted) return;
       if (err) {
-        setError(err.message);
-        setLoading(false);
+        if (inicial) setError(err.message);
         return;
       }
-      const d = (res ?? null) as UbicacionPublica | null;
-      setData(d);
-      setLoading(false);
+      setData((res ?? null) as UbicacionPublica | null);
+      if (inicial) setLoading(false);
     }
-    void cargar();
+    void cargar(true);
+    // La ubicación se actualiza cada 3s mientras la sesión siga activa.
+    const timer = setInterval(() => void cargar(), 3000);
     return () => {
       mounted = false;
+      clearInterval(timer);
     };
   }, [token]);
 
