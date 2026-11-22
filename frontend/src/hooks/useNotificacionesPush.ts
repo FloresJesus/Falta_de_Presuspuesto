@@ -1,44 +1,11 @@
 import { useEffect } from 'react';
-import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
 
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
-
-export const CANAL_SOS = 'sos-alerts';
-
-// Valores de los enums de expo-notifications (evita el falso positivo de import/namespace).
-const IMPORTANCE_MAX = 7; // AndroidImportance.MAX
-const VISIBILITY_PUBLIC = 1; // AndroidNotificationVisibility.PUBLIC
-const USAGE_ALARM = 4; // AndroidAudioUsage.ALARM
-const CONTENT_SONIFICATION = 4; // AndroidAudioContentType.SONIFICATION
-
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
-
-async function configurarCanalSos() {
-  if (Platform.OS !== 'android') return;
-  await Notifications.setNotificationChannelAsync(CANAL_SOS, {
-    name: 'Alertas SOS',
-    description: 'Emergencias de tus contactos de confianza',
-    importance: IMPORTANCE_MAX,
-    vibrationPattern: [0, 500, 300, 500, 300, 800],
-    lockscreenVisibility: VISIBILITY_PUBLIC,
-    sound: 'default',
-    audioAttributes: {
-      usage: USAGE_ALARM,
-      contentType: CONTENT_SONIFICATION,
-    },
-  });
-}
+import { configurarCanalSos } from '@/lib/notificaciones';
 
 /** Registra el token de Expo Push y abre la pantalla correcta al tocar la notificación. */
 export function useNotificacionesPush() {
@@ -74,14 +41,24 @@ export function useNotificacionesPush() {
   }, [user]);
 
   useEffect(() => {
-    const listener = Notifications.addNotificationResponseReceivedListener((response) => {
+    function abrirNotificacion(response: Notifications.NotificationResponse | null) {
+      if (!response) return;
       const data = response.notification.request.content.data as Record<string, unknown>;
       if (data?.type === 'sos' && typeof data.alertaId === 'string') {
         router.push(`/alerta-sos/${data.alertaId}`);
       } else {
         router.push('/contactos/solicitudes');
       }
-    });
+    }
+
+    // Si la app estaba cerrada, el listener no alcanza a ver el toque inicial.
+    void (async () => {
+      const response = await Notifications.getLastNotificationResponseAsync();
+      if (!response) return;
+      abrirNotificacion(response);
+      await Notifications.clearLastNotificationResponseAsync();
+    })();
+    const listener = Notifications.addNotificationResponseReceivedListener(abrirNotificacion);
     return () => listener.remove();
   }, []);
 }

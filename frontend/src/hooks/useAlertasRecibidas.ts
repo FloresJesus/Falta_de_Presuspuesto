@@ -22,23 +22,26 @@ export function useAlertasRecibidas() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const cargar = useCallback(async () => {
+  const cargar = useCallback(async (silencioso = false) => {
     if (!user) {
       setAlertas([]);
       setLoading(false);
       return;
     }
-    setLoading(true);
+    if (!silencioso) setLoading(true);
     setError(null);
     const { data, error: err } = await supabase.rpc('alertas_recibidas');
     if (err) setError(err.message);
     else setAlertas((data ?? []) as AlertaRecibida[]);
-    setLoading(false);
+    if (!silencioso) setLoading(false);
   }, [user]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void cargar();
+    // Refresca el banner mientras la app está abierta.
+    const timer = setInterval(() => void cargar(true), 5000);
+    return () => clearInterval(timer);
   }, [cargar]);
 
   const descartar = useCallback(async (id: string) => {

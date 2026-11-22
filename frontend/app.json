@@ -52,7 +52,12 @@
           "isAndroidBackgroundLocationEnabled": true
         }
       ],
-      "expo-notifications",
+      [
+        "expo-notifications",
+        {
+          "sounds": ["./assets/sounds/sos_bocina.wav"]
+        }
+      ],
       [
         "expo-status-bar",
         {

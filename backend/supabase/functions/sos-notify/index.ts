@@ -45,25 +45,35 @@ Deno.serve(async (req: Request) => {
       .maybeSingle();
     if (!alerta || alerta.estado !== 'enviada') return json({ error: 'Alerta no encontrada' }, 404);
 
+    // Solo quien envió la alerta puede disparar su aviso.
+    if (alerta.usuaria_id !== user.id) return json({ error: 'No autorizado' }, 403);
+
+    // El contacto real es el perfil vinculado (perfil_id). usuaria_id es la
+    // dueña de la fila, es decir, quien envía la alerta.
     const { data: contacto } = await admin
       .from('contactos_confianza')
-      .select('usuaria_id')
+      .select('perfil_id')
       .eq('id', alerta.contacto_id)
       .maybeSingle();
     if (!contacto) return json({ error: 'Contacto no encontrado' }, 404);
+    if (!contacto.perfil_id) {
+      return json({ enviado: false, motivo: 'contacto sin cuenta registrada' });
+    }
 
     const { data: destinatario } = await admin
       .from('perfiles')
       .select('nombre, push_token')
-      .eq('id', contacto.usuaria_id)
+      .eq('id', contacto.perfil_id)
       .maybeSingle();
     if (!destinatario?.push_token) return json({ enviado: false, motivo: 'sin push_token' });
 
-    const { data: sesion } = await admin
-      .from('sesiones_acompanamiento')
-      .select('token_seguimiento')
-      .eq('id', alerta.sesion_id)
-      .maybeSingle();
+    const { data: sesion } = alerta.sesion_id
+      ? await admin
+          .from('sesiones_acompanamiento')
+          .select('token_seguimiento')
+          .eq('id', alerta.sesion_id)
+          .maybeSingle()
+      : { data: null };
 
     const { data: emisora } = await admin
       .from('perfiles')
@@ -85,9 +95,9 @@ Deno.serve(async (req: Request) => {
         to: destinatario.push_token,
         title: `🚨 Alerta SOS de ${nombre}`,
         body: `${alerta.mensaje}. Abre para ver su ubicación en vivo.`,
-        sound: 'default',
+        sound: 'sos_bocina.wav',
         priority: 'high',
-        channelId: 'sos-alerts',
+        channelId: 'sos-alerts-v2',
         interruptionLevel: 'timeSensitive',
         data: { type: 'sos', alertaId: alerta.id, token },
       }),

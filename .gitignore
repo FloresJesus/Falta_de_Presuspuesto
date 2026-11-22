@@ -5,6 +5,10 @@ node_modules/
 .env
 .env.*
 !.env.example
+.secrets/
+
+# APKs de prueba
+*.apk
 
 # Expo / build
 .expo/
