@@ -4,7 +4,8 @@ import { Text } from '@/components/text';
 import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import type MapViewType from 'react-native-maps';
+import type { WebView as WebViewType } from 'react-native-webview';
+import { MapaOSM } from '@/components/MapaOSM';
 
 import { Badge, Button, Card } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
@@ -14,7 +15,6 @@ import type { ZonaPeligro } from '@/lib/types';
 import { Palette, Radius, Shadows } from '@/constants/theme';
 
 const ORURO = { latitude: -17.7833, longitude: -67.1333, latitudeDelta: 0.09, longitudeDelta: 0.09 };
-const COLORES = ['#2E9E5B', '#D9A400', '#E87A1F', '#E23B3B', '#8E1B2E'];
 
 export default function MapaScreen() {
   const { profile } = useAuth();
@@ -26,20 +26,14 @@ export default function MapaScreen() {
   const [formError, setFormError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
   const esAdmin = profile?.rol === 'admin';
-  const mapRef = useRef<MapViewType | null>(null);
+  const webRef = useRef<WebViewType | null>(null);
   // Carga diferida para no evaluar codegenNativeComponent en react-native-web.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const maps = Platform.OS === 'web' ? null : (require('react-native-maps') as typeof import('react-native-maps'));
-  const MapView = maps!.default;
-  const Marker = maps!.Marker;
-
   useFocusEffect(useCallback(() => { void cargar(); }, [cargar]));
 
   useEffect(() => {
-    if (location && mapRef.current) {
-      mapRef.current.animateToRegion(
-        { latitude: location.latitude, longitude: location.longitude, latitudeDelta: 0.04, longitudeDelta: 0.04 },
-        800,
+    if (location && webRef.current) {
+      webRef.current.injectJavaScript(
+        `window.moverMapa && window.moverMapa(${location.latitude}, ${location.longitude}); true;`,
       );
     }
   }, [location]);
@@ -48,9 +42,8 @@ export default function MapaScreen() {
     const res = await obtenerPosicion();
     if (res.location) {
       setForm((f) => ({ ...f, latitud: String(res.location!.latitude), longitud: String(res.location!.longitude) }));
-      mapRef.current?.animateToRegion(
-        { latitude: res.location.latitude, longitude: res.location.longitude, latitudeDelta: 0.04, longitudeDelta: 0.04 },
-        800,
+      webRef.current?.injectJavaScript(
+        `window.moverMapa && window.moverMapa(${res.location.latitude}, ${res.location.longitude}); true;`,
       );
     }
   }
@@ -85,33 +78,13 @@ export default function MapaScreen() {
 
   return (
     <View style={styles.root}>
-      <MapView
-        ref={mapRef}
-        style={StyleSheet.absoluteFill}
-        initialRegion={region}
-        showsUserLocation
-        showsCompass
-        zoomEnabled
-        scrollEnabled
-        rotateEnabled>
-        {location ? (
-          <Marker coordinate={{ latitude: location.latitude, longitude: location.longitude }} title="Tu ubicación">
-            <View style={styles.yo}><Ionicons name="person" size={20} color={Palette.surface} /></View>
-          </Marker>
-        ) : null}
-        {zonas.map((z) => (
-          <Marker
-            key={z.id}
-            coordinate={{ latitude: z.latitud, longitude: z.longitud }}
-            title={z.nombre}
-            description={`Índice ${z.indice_peligro}/5`}
-            onPress={() => setSeleccion(z)}>
-            <View style={[styles.pin, { backgroundColor: COLORES[z.indice_peligro - 1] }]}>
-              <Text style={styles.pinText}>{z.indice_peligro}</Text>
-            </View>
-          </Marker>
-        ))}
-      </MapView>
+      <MapaOSM
+        webRef={webRef}
+        zonas={zonas}
+        center={{ latitude: region.latitude, longitude: region.longitude }}
+        onZonePress={setSeleccion}
+        onMapPress={(lat, lng) => setForm((f) => ({ ...f, latitud: String(lat), longitud: String(lng) }))}
+      />
 
       <SafeAreaView style={styles.safe} edges={['top']} pointerEvents="box-none">
         <View style={styles.header}>
@@ -202,26 +175,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: { fontSize: 20, fontWeight: '800', color: Palette.purple },
   error: { color: Palette.danger, fontWeight: '700', marginHorizontal: 20, marginTop: 8 },
-  yo: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Palette.purple,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: Palette.surface,
-  },
-  pin: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: Palette.surface,
-  },
-  pinText: { color: Palette.surface, fontWeight: '800', fontSize: 15 },
   detalle: { marginHorizontal: 20, marginTop: 12, gap: 8 },
   detalleTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   detalleTitle: { fontSize: 17, fontWeight: '800', color: Palette.purpleDeep },
