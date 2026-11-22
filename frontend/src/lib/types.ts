@@ -81,6 +81,16 @@ export interface AlertaSOS {
   contacto?: ContactoConfianza | null;
 }
 
+export interface RutaPeligro {
+  id: string;
+  nombre: string;
+  descripcion: string | null;
+  coordenadas: [number, number][];
+  indice_peligro: number;
+  activo: boolean;
+  creado_en: string;
+}
+
 export interface PersonaDesaparecida {
   id: string;
   nombre: string;

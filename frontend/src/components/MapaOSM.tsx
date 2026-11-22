@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
 
-import type { ZonaPeligro } from '@/lib/types';
+import type { RutaPeligro, ZonaPeligro } from '@/lib/types';
 
 type Centro = { latitude: number; longitude: number };
 
@@ -18,19 +18,31 @@ const MapaWebView = WebView as unknown as React.ComponentType<{
 
 export function MapaOSM({
   zonas,
+  rutas,
   center,
+  userLocation,
   onZonePress,
   onMapPress,
   webRef,
 }: {
   zonas: ZonaPeligro[];
+  rutas: RutaPeligro[];
   center: Centro;
+  userLocation?: Centro | null;
   onZonePress: (z: ZonaPeligro) => void;
   onMapPress?: (lat: number, lng: number) => void;
   webRef?: React.RefObject<WebView | null>;
 }) {
   const [inicial] = useState(center);
-  const html = useMemo(() => buildHtml(zonas, inicial), [zonas, inicial]);
+  const html = useMemo(() => buildHtml(zonas, rutas, inicial), [zonas, rutas, inicial]);
+
+  useEffect(() => {
+    if (userLocation && webRef?.current) {
+      webRef.current.injectJavaScript(
+        `window.miUbicacion && window.miUbicacion(${userLocation.latitude}, ${userLocation.longitude}); true;`,
+      );
+    }
+  }, [userLocation, webRef]);
 
   return (
     <MapaWebView
@@ -62,7 +74,7 @@ function esc(texto: string | null | undefined) {
   return (texto ?? '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function buildHtml(zonas: ZonaPeligro[], center: Centro) {
+function buildHtml(zonas: ZonaPeligro[], rutas: RutaPeligro[], center: Centro) {
   const datos = zonas.map((z) => ({
     id: z.id,
     nombre: esc(z.nombre),
@@ -71,6 +83,13 @@ function buildHtml(zonas: ZonaPeligro[], center: Centro) {
     lng: z.longitud,
     radio: z.radio_m,
     indice: z.indice_peligro,
+  }));
+  const rutasDatos = rutas.map((r) => ({
+    id: r.id,
+    nombre: esc(r.nombre),
+    descripcion: esc(r.descripcion),
+    puntos: r.coordenadas,
+    indice: r.indice_peligro,
   }));
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8" />
@@ -87,6 +106,13 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '&copy; OpenStreetMap'
 }).addTo(map);
+const rutas = ${JSON.stringify(rutasDatos)};
+rutas.forEach(r => {
+  const color = colores[Math.max(0, Math.min(4, r.indice - 1))];
+  L.polyline(r.puntos, { color, weight: 7, opacity: 0.85 }).addTo(map)
+    .bindPopup('<b>' + r.nombre + '</b><br/>' + (r.descripcion || '') + '<br/>Riesgo ' + r.indice + '/5');
+});
+
 zonas.forEach(z => {
   const color = colores[Math.max(0, Math.min(4, z.indice - 1))];
   L.circle([z.lat, z.lng], { radius: z.radio, color, fillColor: color, fillOpacity: 0.15, weight: 2 }).addTo(map);
@@ -100,6 +126,15 @@ zonas.forEach(z => {
     .bindPopup('<b>' + z.nombre + '</b><br/>' + (z.descripcion || '') + '<br/>Riesgo ' + z.indice + '/5')
     .on('click', () => window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'zona', id: z.id })));
 });
+let yo = null;
+window.miUbicacion = (lat, lng) => {
+  if (yo) { yo.setLatLng([lat, lng]); }
+  else {
+    const icon = L.divIcon({ className: '', html: '<div style="width:22px;height:22px;border-radius:50%;background:#2F80ED;border:4px solid white;box-shadow:0 0 0 6px rgba(47,128,237,0.25)"></div>', iconSize: [22, 22], iconAnchor: [11, 11] });
+    yo = L.marker([lat, lng], { icon }).addTo(map).bindPopup('Estás aquí');
+  }
+  map.setView([lat, lng], Math.max(map.getZoom(), 15));
+};
 window.moverMapa = (lat, lng) => { map.setView([lat, lng], 16); };
 map.on('click', (e) => window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'mapa', lat: e.latlng.lat, lng: e.latlng.lng })));
 </script></body></html>`;

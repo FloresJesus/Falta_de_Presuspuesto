@@ -18,8 +18,8 @@ const ORURO = { latitude: -17.7833, longitude: -67.1333, latitudeDelta: 0.09, lo
 
 export default function MapaScreen() {
   const { profile } = useAuth();
-  const { location, obtenerPosicion } = useUbicacion();
-  const { zonas, error, cargar, crear, desactivar } = useZonasPeligro();
+  const { location, obtenerPosicion, solicitarPermiso } = useUbicacion();
+  const { zonas, rutas, error, cargar, crear, desactivar } = useZonasPeligro();
   const [seleccion, setSeleccion] = useState<ZonaPeligro | null>(null);
   const [formVisible, setFormVisible] = useState(false);
   const [form, setForm] = useState({ nombre: '', descripcion: '', latitud: '', longitud: '', radio: '300', indice: '3', tipo: 'zona' as ZonaPeligro['tipo'] });
@@ -29,6 +29,13 @@ export default function MapaScreen() {
   const webRef = useRef<WebViewType | null>(null);
   // Carga diferida para no evaluar codegenNativeComponent en react-native-web.
   useFocusEffect(useCallback(() => { void cargar(); }, [cargar]));
+
+  useEffect(() => {
+    void (async () => {
+      const permiso = await solicitarPermiso();
+      if (permiso === 'granted') await obtenerPosicion();
+    })();
+  }, [obtenerPosicion, solicitarPermiso]);
 
   useEffect(() => {
     if (location && webRef.current) {
@@ -81,6 +88,8 @@ export default function MapaScreen() {
       <MapaOSM
         webRef={webRef}
         zonas={zonas}
+        rutas={rutas}
+        userLocation={location}
         center={{ latitude: region.latitude, longitude: region.longitude }}
         onZonePress={setSeleccion}
         onMapPress={(lat, lng) => setForm((f) => ({ ...f, latitud: String(lat), longitud: String(lng) }))}
@@ -95,6 +104,12 @@ export default function MapaScreen() {
           <Pressable onPress={() => void ubicarme()} style={styles.circleBtn}>
             <Ionicons name="locate-outline" size={22} color={Palette.purple} />
           </Pressable>
+        </View>
+
+        <View style={styles.leyenda}>
+          <Text style={styles.leyendaText}>
+            Zonas de riesgo: {zonas.length} · Rutas peligrosas: {rutas.length}
+          </Text>
         </View>
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -175,6 +190,16 @@ const styles = StyleSheet.create({
   },
   headerTitle: { fontSize: 20, fontWeight: '800', color: Palette.purple },
   error: { color: Palette.danger, fontWeight: '700', marginHorizontal: 20, marginTop: 8 },
+  leyenda: {
+    alignSelf: 'flex-start',
+    marginHorizontal: 20,
+    marginTop: 10,
+    backgroundColor: Palette.surface,
+    borderRadius: Radius.pill,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+  },
+  leyendaText: { fontSize: 11, fontWeight: '800', color: Palette.danger },
   detalle: { marginHorizontal: 20, marginTop: 12, gap: 8 },
   detalleTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   detalleTitle: { fontSize: 17, fontWeight: '800', color: Palette.purpleDeep },

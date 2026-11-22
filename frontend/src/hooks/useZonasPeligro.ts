@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import type { ZonaPeligro } from '@/lib/types';
+import type { RutaPeligro, ZonaPeligro } from '@/lib/types';
 
 export interface ZonaInput {
   nombre: string;
@@ -14,20 +14,22 @@ export interface ZonaInput {
 
 export function useZonasPeligro() {
   const [zonas, setZonas] = useState<ZonaPeligro[]>([]);
+  const [rutas, setRutas] = useState<RutaPeligro[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const cargar = useCallback(async () => {
     setLoading(true);
-    const { data, error: err } = await supabase
-      .from('zonas_peligro')
-      .select('*')
-      .eq('activo', true)
-      .order('indice_peligro', { ascending: false });
-    if (err) setError(err.message);
-    else {
+    const [zonasRes, rutasRes] = await Promise.all([
+      supabase.from('zonas_peligro').select('*').eq('activo', true).order('indice_peligro', { ascending: false }),
+      supabase.from('rutas_peligro').select('*').eq('activo', true).order('indice_peligro', { ascending: false }),
+    ]);
+    if (zonasRes.error || rutasRes.error) {
+      setError(zonasRes.error?.message ?? rutasRes.error?.message ?? 'No se pudo cargar el mapa.');
+    } else {
       setError(null);
-      setZonas((data ?? []) as ZonaPeligro[]);
+      setZonas((zonasRes.data ?? []) as ZonaPeligro[]);
+      setRutas((rutasRes.data ?? []) as RutaPeligro[]);
     }
     setLoading(false);
   }, []);
@@ -61,5 +63,5 @@ export function useZonasPeligro() {
     return { error: null };
   }, [cargar]);
 
-  return { zonas, loading, error, cargar, crear, desactivar };
+  return { zonas, rutas, loading, error, cargar, crear, desactivar };
 }
