@@ -15,6 +15,7 @@ import type { ZonaPeligro } from '@/lib/types';
 import { Palette, Radius, Shadows } from '@/constants/theme';
 
 const ORURO = { latitude: -17.9696, longitude: -67.1147, latitudeDelta: 0.06, longitudeDelta: 0.06 };
+const COLORES = ['#2E9E5B', '#D9A400', '#E87A1F', '#E23B3B', '#8E1B2E'];
 
 export default function MapaScreen() {
   const { profile } = useAuth();
@@ -112,6 +113,42 @@ export default function MapaScreen() {
           </Text>
         </View>
 
+        <View style={styles.escala}>
+          <Text style={styles.escalaLabel}>Riesgo:</Text>
+          {[1, 2, 3, 4, 5].map((n) => (
+            <View key={n} style={[styles.escalaDot, { backgroundColor: COLORES[n - 1] }]}>
+              <Text style={styles.escalaDotText}>{n}</Text>
+            </View>
+          ))}
+          <Text style={styles.escalaLabel}>1 bajo · 5 alto</Text>
+        </View>
+
+        <ScrollView style={styles.lista} showsVerticalScrollIndicator={false}>
+          <Text style={styles.listaTitulo}>Calles y zonas peligrosas</Text>
+          {rutas.map((r) => (
+            <View key={r.id} style={styles.item}>
+              <View style={[styles.itemBadge, { backgroundColor: COLORES[r.indice_peligro - 1] }]}>
+                <Text style={styles.itemBadgeText}>{r.indice_peligro}</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.itemNombre}>{r.nombre}</Text>
+                <Text style={styles.itemDesc}>{r.descripcion ?? 'Ruta reportada como peligrosa.'}</Text>
+              </View>
+            </View>
+          ))}
+          {zonas.map((z) => (
+            <View key={z.id} style={styles.item}>
+              <View style={[styles.itemBadge, { backgroundColor: COLORES[z.indice_peligro - 1] }]}>
+                <Text style={styles.itemBadgeText}>{z.indice_peligro}</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.itemNombre}>{z.nombre}</Text>
+                <Text style={styles.itemDesc}>{z.descripcion ?? 'Zona con índice de riesgo.'}</Text>
+              </View>
+            </View>
+          ))}
+        </ScrollView>
+
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
         {seleccion ? (
@@ -200,6 +237,17 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
   },
   leyendaText: { fontSize: 11, fontWeight: '800', color: Palette.danger },
+  escala: { flexDirection: 'row', alignItems: 'center', gap: 4, marginHorizontal: 20, marginTop: 8 },
+  escalaLabel: { fontSize: 10, fontWeight: '700', color: Palette.mutedStrong },
+  escalaDot: { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  escalaDotText: { color: Palette.surface, fontSize: 10, fontWeight: '800' },
+  lista: { marginTop: 8, marginHorizontal: 20 },
+  listaTitulo: { fontSize: 14, fontWeight: '800', color: Palette.purpleDeep, marginBottom: 6 },
+  item: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 8 },
+  itemBadge: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
+  itemBadgeText: { color: Palette.surface, fontSize: 12, fontWeight: '800' },
+  itemNombre: { fontSize: 12, fontWeight: '800', color: Palette.purpleDeep },
+  itemDesc: { fontSize: 10, fontWeight: '600', color: Palette.muted, marginTop: 1 },
   detalle: { marginHorizontal: 20, marginTop: 12, gap: 8 },
   detalleTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   detalleTitle: { fontSize: 17, fontWeight: '800', color: Palette.purpleDeep },
