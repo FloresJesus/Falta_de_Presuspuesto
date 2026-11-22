@@ -131,7 +131,7 @@ export default function AlertaSosRecibidaScreen() {
             ) : null}
             <Button
               title="Ya la atendí / Descartar alerta"
-              variant="outline"
+              variant="light"
               fullWidth
               loading={descartando}
               onPress={() => void descartarAlerta()}
