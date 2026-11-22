@@ -3,7 +3,7 @@ import { Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } f
 import { Text } from '@/components/text';
 import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import MapView, { Circle, Marker } from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Badge, Button, Card } from '@/components/ui';
@@ -84,16 +84,6 @@ export default function MapaScreen() {
                 <Text style={styles.pinText}>{z.indice_peligro}</Text>
               </View>
             </Marker>
-          ))}
-          {zonas.map((z) => (
-            <Circle
-              key={`radio-${z.id}`}
-              center={{ latitude: z.latitud, longitude: z.longitud }}
-              radius={z.radio_m}
-              fillColor={`${COLORES[z.indice_peligro - 1]}22`}
-              strokeColor={`${COLORES[z.indice_peligro - 1]}88`}
-              strokeWidth={2}
-            />
           ))}
         </MapView>
       )}
