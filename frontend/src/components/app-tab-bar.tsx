@@ -56,7 +56,13 @@ export function AppTabBar({ state, emitter, navigateToTab, navigation }: any) {
                 </View>
               ) : null}
             </View>
-            <Text style={[styles.label, focused && styles.labelActive]}>{meta.label}</Text>
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}
+              style={[styles.label, focused && styles.labelActive]}>
+              {meta.label}
+            </Text>
           </Pressable>
         );
       })}
@@ -67,7 +73,9 @@ export function AppTabBar({ state, emitter, navigateToTab, navigation }: any) {
         <View style={styles.sosIconWrap}>
           <Ionicons name="warning" size={24} color={Palette.surface} />
         </View>
-        <Text style={styles.sosLabel}>SOS</Text>
+        <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={styles.sosLabel}>
+          SOS
+        </Text>
       </Pressable>
     </View>
   );
@@ -88,7 +96,7 @@ const styles = StyleSheet.create({
     paddingTop: 9,
     ...(Shadows.floating ?? {}),
   },
-  item: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3, paddingVertical: 3 },
+  item: { flex: 1, minWidth: 0, alignItems: 'center', justifyContent: 'center', gap: 3, paddingVertical: 3, paddingHorizontal: 1 },
   iconWrap: { position: 'relative' },
   tabBadge: {
     position: 'absolute',
@@ -103,7 +111,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 3,
   },
   tabBadgeText: { color: Palette.surface, fontSize: 9, fontWeight: '800' },
-  label: { fontSize: 10.5, fontWeight: '600', color: Palette.muted },
+  label: { width: '100%', textAlign: 'center', fontSize: 9, lineHeight: 12, fontWeight: '600', color: Palette.muted },
   labelActive: { color: Palette.pink, fontWeight: '700' },
   sosItem: { justifyContent: 'center' },
   sosIconWrap: {
@@ -115,5 +123,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: -14,
   },
-  sosLabel: { fontSize: 10.5, fontWeight: '800', color: Palette.pink },
+  sosLabel: { width: '100%', textAlign: 'center', fontSize: 9, lineHeight: 12, fontWeight: '800', color: Palette.pink },
 });

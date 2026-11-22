@@ -33,7 +33,7 @@ function fechaCorta(iso: string) {
 
 export default function SolicitudesScreen() {
   const { entrantes, salientes, loading, error, cargar, responder, cancelar } = useSolicitudes();
-  const { alertas: sosAlertas, cargar: cargarSos } = useAlertasRecibidas();
+  const { alertas: sosAlertas, cargar: cargarSos, descartar: descartarSos } = useAlertasRecibidas();
   const [accionId, setAccionId] = useState<string | null>(null);
   const [accionError, setAccionError] = useState<string | null>(null);
 
@@ -129,6 +129,15 @@ export default function SolicitudesScreen() {
                 />
               </View>
             ) : null}
+            <View style={{ flex: 1 }}>
+              <Button
+                title="Descartar"
+                variant="ghost"
+                size="sm"
+                fullWidth
+                onPress={() => void descartarSos(alerta.id)}
+              />
+            </View>
           </View>
         </Card>
       ))}

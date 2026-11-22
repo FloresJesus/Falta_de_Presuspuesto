@@ -8,6 +8,7 @@ import * as Linking from 'expo-linking';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui';
+import { useAlertasRecibidas } from '@/hooks/useAlertasRecibidas';
 import { supabase } from '@/lib/supabase';
 import { formatearFecha } from '@/lib/utils';
 import { Gradients, Palette } from '@/constants/theme';
@@ -25,9 +26,11 @@ type AlertaDetalle = {
 
 export default function AlertaSosRecibidaScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { descartar } = useAlertasRecibidas();
   const [alerta, setAlerta] = useState<AlertaDetalle | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [descartando, setDescartando] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -42,6 +45,15 @@ export default function AlertaSosRecibidaScreen() {
       mounted = false;
     };
   }, [id]);
+
+  async function descartarAlerta() {
+    setDescartando(true);
+    setError(null);
+    const res = await descartar(id);
+    setDescartando(false);
+    if (res.error) setError(res.error);
+    else router.back();
+  }
 
   if (loading) {
     return (
@@ -117,7 +129,15 @@ export default function AlertaSosRecibidaScreen() {
                 onPress={() => void Linking.openURL(`tel:${alerta.telefono_usuaria}`)}
               />
             ) : null}
+            <Button
+              title="Ya la atendí / Descartar alerta"
+              variant="outline"
+              fullWidth
+              loading={descartando}
+              onPress={() => void descartarAlerta()}
+            />
           </View>
+          {error ? <Text style={styles.error}>{error}</Text> : null}
         </View>
       </SafeAreaView>
     </LinearGradient>
@@ -183,4 +203,5 @@ const styles = StyleSheet.create({
   actions: { alignSelf: 'stretch', gap: 10, marginTop: 28 },
   errorTitle: { color: Palette.surface, fontSize: 22, fontWeight: '800', textAlign: 'center' },
   errorText: { color: 'rgba(255,255,255,0.85)', fontSize: 14, fontWeight: '600', textAlign: 'center' },
+  error: { color: '#FFB3C6', fontSize: 13, fontWeight: '700', textAlign: 'center', marginTop: 8 },
 });

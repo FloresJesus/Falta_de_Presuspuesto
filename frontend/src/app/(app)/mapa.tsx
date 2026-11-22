@@ -22,7 +22,7 @@ export default function MapaScreen() {
   const { profile } = useAuth();
   const { location, obtenerPosicion, solicitarPermiso } = useUbicacion();
   const { zonas, rutas, error, cargar, crear, desactivar } = useZonasPeligro();
-  const { alertas: sosRecibidas, cargar: cargarSos } = useAlertasRecibidas();
+  const { alertas: sosRecibidas, cargar: cargarSos, descartar: descartarSos } = useAlertasRecibidas();
   const [seleccion, setSeleccion] = useState<ZonaPeligro | null>(null);
   const [formVisible, setFormVisible] = useState(false);
   const [form, setForm] = useState({ nombre: '', descripcion: '', latitud: '', longitud: '', radio: '300', indice: '3', tipo: 'zona' as ZonaPeligro['tipo'] });
@@ -132,7 +132,7 @@ export default function MapaScreen() {
           <Text style={styles.escalaLabel}>1 bajo · 5 alto</Text>
         </View>
 
-        <ScrollView style={styles.lista} showsVerticalScrollIndicator={false}>
+        <ScrollView style={styles.lista} contentContainerStyle={styles.listaContenido} showsVerticalScrollIndicator={false}>
           {sosRecibidas.length > 0 ? (
             <>
               <Text style={[styles.listaTitulo, { color: Palette.danger }]}>Alertas SOS recibidas</Text>
@@ -149,7 +149,9 @@ export default function MapaScreen() {
                         : 'Sin ubicación disponible'}
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={16} color={Palette.purple} />
+                  <Pressable onPress={() => void descartarSos(a.id)} style={styles.descartarBtn}>
+                    <Ionicons name="checkmark-done-outline" size={18} color={Palette.success} />
+                  </Pressable>
                 </Pressable>
               ))}
             </>
@@ -273,12 +275,14 @@ const styles = StyleSheet.create({
   escalaDot: { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   escalaDotText: { color: Palette.surface, fontSize: 10, fontWeight: '800' },
   lista: { marginTop: 8, marginHorizontal: 20 },
+  listaContenido: { paddingBottom: 110 },
   listaTitulo: { fontSize: 14, fontWeight: '800', color: Palette.purpleDeep, marginBottom: 6 },
   item: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 8 },
   itemBadge: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   itemBadgeText: { color: Palette.surface, fontSize: 12, fontWeight: '800' },
   itemNombre: { fontSize: 12, fontWeight: '800', color: Palette.purpleDeep },
   itemDesc: { fontSize: 10, fontWeight: '600', color: Palette.muted, marginTop: 1 },
+  descartarBtn: { padding: 6 },
   detalle: { marginHorizontal: 20, marginTop: 12, gap: 8 },
   detalleTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   detalleTitle: { fontSize: 17, fontWeight: '800', color: Palette.purpleDeep },

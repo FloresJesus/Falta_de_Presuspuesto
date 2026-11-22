@@ -41,5 +41,12 @@ export function useAlertasRecibidas() {
     void cargar();
   }, [cargar]);
 
-  return { alertas, loading, error, cargar };
+  const descartar = useCallback(async (id: string) => {
+    const { error: err } = await supabase.rpc('descartar_alerta_recibida', { p_alerta_id: id });
+    if (err) return { error: err.message };
+    await cargar();
+    return { error: null };
+  }, [cargar]);
+
+  return { alertas, loading, error, cargar, descartar };
 }
