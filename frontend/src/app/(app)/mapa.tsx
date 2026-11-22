@@ -3,11 +3,9 @@ import { Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } f
 import { Text } from '@/components/text';
 import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import MapView, { Marker } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Badge, Button, Card } from '@/components/ui';
-import { MapCanvas } from '@/components/MapCanvas';
 import { useAuth } from '@/context/AuthContext';
 import { useUbicacion } from '@/hooks/useUbicacion';
 import { useZonasPeligro } from '@/hooks/useZonasPeligro';
@@ -27,6 +25,11 @@ export default function MapaScreen() {
   const [formError, setFormError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
   const esAdmin = profile?.rol === 'admin';
+  // Carga diferida para no evaluar codegenNativeComponent en react-native-web.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const maps = Platform.OS === 'web' ? null : (require('react-native-maps') as typeof import('react-native-maps'));
+  const MapView = maps!.default;
+  const Marker = maps!.Marker;
 
   useFocusEffect(useCallback(() => { void cargar(); }, [cargar]));
 
@@ -56,37 +59,34 @@ export default function MapaScreen() {
     setFormVisible(false);
   }
 
+  // En web se usa mapa.web.tsx; este componente nunca llega a renderizar.
+  if (Platform.OS === 'web') return null;
+
   const region = location
     ? { latitude: location.latitude, longitude: location.longitude, latitudeDelta: 0.05, longitudeDelta: 0.05 }
     : ORURO;
 
   return (
     <View style={styles.root}>
-      {Platform.OS === 'web' ? (
-        <View style={StyleSheet.absoluteFill}>
-          <MapCanvas latitude={region.latitude} longitude={region.longitude} status="idle" markers />
-        </View>
-      ) : (
-        <MapView style={StyleSheet.absoluteFill} initialRegion={region} region={region}>
-          {location ? (
-            <Marker coordinate={{ latitude: location.latitude, longitude: location.longitude }} title="Tu ubicación">
-              <View style={styles.yo}><Ionicons name="person" size={20} color={Palette.surface} /></View>
-            </Marker>
-          ) : null}
-          {zonas.map((z) => (
-            <Marker
-              key={z.id}
-              coordinate={{ latitude: z.latitud, longitude: z.longitud }}
-              title={z.nombre}
-              description={`Índice ${z.indice_peligro}/5`}
-              onPress={() => setSeleccion(z)}>
-              <View style={[styles.pin, { backgroundColor: COLORES[z.indice_peligro - 1] }]}>
-                <Text style={styles.pinText}>{z.indice_peligro}</Text>
-              </View>
-            </Marker>
-          ))}
-        </MapView>
-      )}
+      <MapView style={StyleSheet.absoluteFill} initialRegion={region} region={region}>
+        {location ? (
+          <Marker coordinate={{ latitude: location.latitude, longitude: location.longitude }} title="Tu ubicación">
+            <View style={styles.yo}><Ionicons name="person" size={20} color={Palette.surface} /></View>
+          </Marker>
+        ) : null}
+        {zonas.map((z) => (
+          <Marker
+            key={z.id}
+            coordinate={{ latitude: z.latitud, longitude: z.longitud }}
+            title={z.nombre}
+            description={`Índice ${z.indice_peligro}/5`}
+            onPress={() => setSeleccion(z)}>
+            <View style={[styles.pin, { backgroundColor: COLORES[z.indice_peligro - 1] }]}>
+              <Text style={styles.pinText}>{z.indice_peligro}</Text>
+            </View>
+          </Marker>
+        ))}
+      </MapView>
 
       <SafeAreaView style={styles.safe} edges={['top']} pointerEvents="box-none">
         <View style={styles.header}>
