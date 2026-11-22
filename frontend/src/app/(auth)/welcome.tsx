@@ -16,7 +16,7 @@ export default function WelcomeScreen() {
         <Polygon points="195,735 295,844 95,844" fill="rgba(0,0,0,0.08)" />
       </Svg>
 
-      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <SafeAreaView style={styles.safe} edges={['bottom']}>
         <View style={styles.hero}>
           <BrandLogo width={190} />
           <Text style={styles.tagline}>Tu seguridad.{'\n'}Siempre contigo.</Text>

@@ -77,7 +77,7 @@ export default function AlertaSosRecibidaScreen() {
   return (
     <LinearGradient colors={Gradients.hero} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} style={styles.root}>
       <View style={styles.glow} />
-      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <SafeAreaView style={styles.safe} edges={['bottom']}>
         <View style={styles.topBar}>
           <Pressable onPress={() => router.back()} style={styles.backBtn}>
             <Ionicons name="arrow-back" size={28} color={Palette.surface} />

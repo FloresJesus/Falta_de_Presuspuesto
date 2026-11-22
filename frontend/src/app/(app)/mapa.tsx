@@ -105,7 +105,7 @@ export default function MapaScreen() {
         onMapPress={(lat, lng) => setForm((f) => ({ ...f, latitud: String(lat), longitud: String(lng) }))}
       />
 
-      <SafeAreaView style={styles.safe} edges={['top']} pointerEvents="box-none">
+      <SafeAreaView style={styles.safe} edges={[]} pointerEvents="box-none">
         <View style={styles.header}>
           <Pressable onPress={() => router.replace('/inicio')} style={styles.circleBtn}>
             <Ionicons name="arrow-back" size={22} color={Palette.purple} />

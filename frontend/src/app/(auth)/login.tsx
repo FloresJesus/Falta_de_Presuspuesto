@@ -37,7 +37,7 @@ export default function LoginScreen() {
   return (
     <View style={styles.root}>
       <LinearGradient colors={Gradients.soft} style={styles.topBand} />
-      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <SafeAreaView style={styles.safe} edges={['bottom']}>
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           <Pressable onPress={() => router.replace('/')} style={styles.backBtn}>
             <Ionicons name="chevron-back" size={20} color={Palette.purple} />
