@@ -9,7 +9,7 @@ app.use(cors());
 app.use(express.json());
 
 app.get('/', (req, res) => {
-  res.json({ nombre: 'LÍA API', version: '1.0.0', salud: '/api/health' });
+  res.json({ nombre: 'MASI API', version: '1.0.0', salud: '/api/health' });
 });
 
 app.use('/api', routes);

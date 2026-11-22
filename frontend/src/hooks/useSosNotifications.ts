@@ -43,7 +43,7 @@ export function useSosNotifications() {
           await Notifications.scheduleNotificationAsync({
             content: {
               title: `🚨 Alerta SOS de ${alerta.nombre_usuaria}`,
-              body: `${alerta.mensaje}. Abre LÍA para ver su ubicación.`,
+              body: `${alerta.mensaje}. Abre MASI para ver su ubicación.`,
               sound: 'sos_bocina.wav',
               data: { type: 'sos', alertaId: alerta.id, token: alerta.token_seguimiento },
             },

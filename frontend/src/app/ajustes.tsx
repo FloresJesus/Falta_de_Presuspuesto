@@ -37,7 +37,7 @@ export default function AjustesScreen() {
       <Card style={styles.profileCard}>
         <Avatar name={profile?.nombre ?? 'amiga'} size={60} />
         <View style={{ flex: 1 }}>
-          <Text style={styles.profileName}>{profile?.nombre ?? 'Amiga LÍA'}</Text>
+          <Text style={styles.profileName}>{profile?.nombre ?? 'Amiga MASI'}</Text>
           <Text style={styles.profileEmail}>{profile?.correo ?? 'Sin correo registrado'}</Text>
         </View>
       </Card>
@@ -59,7 +59,7 @@ export default function AjustesScreen() {
       <Card style={styles.card}>
         <Text style={styles.sectionTitle}>Preferencias</Text>
         <MenuRow icon="location-outline" label="Compartir ubicación" desc="Acompañamiento con autorización explícita." onPress={() => router.push('/compartir')} />
-        <MenuRow icon="sparkles-outline" label="Asistente LÍA" desc="Orientación personalizada." onPress={() => router.push('/asistente')} />
+        <MenuRow icon="sparkles-outline" label="Asistente MASI" desc="Orientación personalizada." onPress={() => router.push('/asistente')} />
       </Card>
 
       <Card style={styles.card}>
@@ -79,7 +79,7 @@ export default function AjustesScreen() {
         }}
       />
 
-      <Text style={styles.version}>LÍA · Versión 1.0.0 · Una red que te acompaña.</Text>
+      <Text style={styles.version}>MASI · Versión 1.0.0 · Una red que te acompaña.</Text>
     </ScrollView>
   );
 }

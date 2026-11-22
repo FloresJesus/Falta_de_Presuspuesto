@@ -11,7 +11,7 @@ export interface PersonaDirectorio {
 export type TipoBusquedaContacto = 'correo' | 'telefono';
 
 /**
- * Sugerencias de personas ya registradas en LÍA para agregar como contactos.
+ * Sugerencias de personas ya registradas en MASI para agregar como contactos.
  * La búsqueda es únicamente por correo o teléfono exactos (nunca por nombre),
  * para no exponer el directorio de usuarias.
  */

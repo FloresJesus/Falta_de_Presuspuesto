@@ -1,4 +1,4 @@
-# Cómo probar LÍA de verdad
+# Cómo probar MASI de verdad
 
 ## 1. Salir de Expo Go
 
@@ -49,7 +49,7 @@ Para que suene con **No molestar** en iOS hace falta el entitlement *Critical Al
 
 ## 5. Aviso con la app cerrada (push real)
 
-Hoy el aviso local funciona **con la app abierta**. Para que llegue con LÍA cerrada o en segundo plano falta configurar Expo Push:
+Hoy el aviso local funciona **con la app abierta**. Para que llegue con MASI cerrada o en segundo plano falta configurar Expo Push:
 
 1. Crear/vincular el proyecto EAS (agrega `extra.eas.projectId` a `app.json`):
    ```bash
@@ -63,7 +63,7 @@ Hoy el aviso local funciona **con la app abierta**. Para que llegue con LÍA cer
    npx eas-cli credentials
    # Android → FCM V1 → subir la service account de Firebase
    ```
-4. Recompilar e instalar el APK. Abrir LÍA y iniciar sesión en cada teléfono para registrar el `push_token`.
+4. Recompilar e instalar el APK. Abrir MASI y iniciar sesión en cada teléfono para registrar el `push_token`.
 5. Verificar en Supabase que `perfiles.push_token` ya no esté vacío.
 
 Sin esos pasos, `useSosNotifications` solo puede detectar el SOS mientras la app de quien recibe está abierta.

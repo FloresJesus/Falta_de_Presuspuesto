@@ -1,6 +1,6 @@
-# LÍA — Acompañamiento en seguridad personal
+# MASI — Acompañamiento en seguridad personal
 
-Frontend móvil y web de **LÍA / MASI**, una red de apoyo para mujeres en Bolivia. Construido con Expo SDK 58 + Expo Router, conectado directamente al proyecto de Supabase con los datos iniciales (categorías, contenidos, cuestionario e instituciones).
+Frontend móvil y web de **MASI**, una red de apoyo para mujeres en Bolivia. Construido con Expo SDK 58 + Expo Router, conectado directamente al proyecto de Supabase con los datos iniciales (categorías, contenidos, cuestionario e instituciones).
 
 ## Paleta de marca
 

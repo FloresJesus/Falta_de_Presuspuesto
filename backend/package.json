@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "API del proyecto LÍA (Express + Supabase)",
+  "description": "API del proyecto MASI (Express + Supabase)",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",

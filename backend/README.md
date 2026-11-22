@@ -1,4 +1,4 @@
-# Backend LÍA
+# Backend MASI
 
 API en Node.js (Express) conectada a Supabase.
 

@@ -1,6 +1,6 @@
 import { Alert, Platform } from 'react-native';
 
-export const SOS_DEMO_MENSAJE = 'Alerta SOS de prueba enviada desde LÍA';
+export const SOS_DEMO_MENSAJE = 'Alerta SOS de prueba enviada desde MASI';
 export const EMERGENCIA_NUMERO = '110';
 
 /**

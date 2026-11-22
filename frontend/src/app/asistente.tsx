@@ -36,9 +36,9 @@ export default function AsistenteScreen() {
           <Pressable onPress={() => router.back()} style={styles.iconBtn}>
             <Ionicons name="chevron-back" size={20} color={Palette.purple} />
           </Pressable>
-          <Avatar name="LÍA" size={42} />
+          <Avatar name="MASI" size={42} />
           <View style={{ flex: 1 }}>
-            <Text style={styles.title}>Asistente LÍA</Text>
+            <Text style={styles.title}>Asistente MASI</Text>
             <Text style={styles.subtitle}>Orientación personalizada, siempre disponible.</Text>
           </View>
           <View style={styles.onlineDot} />
@@ -50,7 +50,7 @@ export default function AsistenteScreen() {
               <IconBubble size={68} background={Palette.purpleSoft}>
                 <Ionicons name="sparkles" size={30} color={Palette.purple} />
               </IconBubble>
-              <Text style={styles.emptyTitle}>Hola, soy LÍA</Text>
+              <Text style={styles.emptyTitle}>Hola, soy MASI</Text>
               <Text style={styles.emptyText}>
                 Estoy aquí para orientarte sobre señales, ubicación, denuncias y autocuidado.
               </Text>

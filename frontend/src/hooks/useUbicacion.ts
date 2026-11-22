@@ -123,7 +123,7 @@ export function useUbicacion() {
         showsBackgroundLocationIndicator: true,
         pausesUpdatesAutomatically: false,
         foregroundService: {
-          notificationTitle: 'LÍA · SOS activo',
+          notificationTitle: 'MASI · SOS activo',
           notificationBody: 'Compartiendo tu ubicación con tu contacto de emergencia.',
         },
       });

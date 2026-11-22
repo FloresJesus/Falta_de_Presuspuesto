@@ -30,7 +30,7 @@ export function useAsistente() {
     if (!conv) {
       const { data: created } = await supabase
         .from('conversaciones_asistente')
-        .insert({ usuaria_id: user.id, titulo: 'Conversación con LÍA' })
+        .insert({ usuaria_id: user.id, titulo: 'Conversación con MASI' })
         .select('*')
         .single();
       const nueva = (created ?? null) as ConversacionAsistente | null;
@@ -68,7 +68,7 @@ export function useAsistente() {
       if (!convId) {
         const { data: created } = await supabase
           .from('conversaciones_asistente')
-          .insert({ usuaria_id: user.id, titulo: 'Conversación con LÍA' })
+          .insert({ usuaria_id: user.id, titulo: 'Conversación con MASI' })
           .select('*')
           .single();
         convId = (created as ConversacionAsistente | null)?.id ?? null;
@@ -130,7 +130,7 @@ export function useAsistente() {
 function responderComoLia(mensaje: string): string {
   const t = mensaje.toLowerCase();
   if (/(hola|buenas|buenos días|buenas tardes|qué tal|hey)/.test(t)) {
-    return '¡Hola! Soy LÍA, tu acompañante en seguridad personal. Estoy aquí para ayudarte a conocer tus señales, tu red de apoyo y las rutas de ayuda. ¿Qué te gustaría saber?';
+    return '¡Hola! Soy MASI, tu acompañante en seguridad personal. Estoy aquí para ayudarte a conocer tus señales, tu red de apoyo y las rutas de ayuda. ¿Qué te gustaría saber?';
   }
   if (/(peligro|emergencia|violencia|grito|pelea|ataque|no quiero|quiero salir)/.test(t)) {
     return 'Entiendo que estás en una situación delicada. Si hay peligro inmediato, prioriza tu integridad: busca un lugar seguro y llama a la línea de emergencia policial 110. Puedes activar el botón SOS desde la pantalla principal para que registremos una alerta con tu contacto de confianza. No estás sola.';
