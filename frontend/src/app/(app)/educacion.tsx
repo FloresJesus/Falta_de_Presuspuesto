@@ -46,7 +46,7 @@ export default function EducacionScreen() {
           <Ionicons name="search" size={18} color={Palette.muted} />
           <TextInput
             placeholder="Buscar temas, señales, leyes..."
-            placeholderTextColor="#A897B2"
+            placeholderTextColor={Palette.muted}
             value={query}
             onChangeText={setQuery}
             style={styles.searchInput}
@@ -120,7 +120,9 @@ const styles = StyleSheet.create({
   hero: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Palette.lilac,
+    backgroundColor: Palette.purpleSoft,
+    borderWidth: 1,
+    borderColor: Palette.lilac,
     borderRadius: Radius.xxl,
     paddingLeft: 14,
     paddingRight: 16,
@@ -130,9 +132,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   heroMascot: { marginRight: 4 },
-  heroTitle: { flex: 1, fontSize: 19, fontWeight: '800', color: Palette.purple, lineHeight: 26, letterSpacing: -0.3 },
-  sectionTitle: { fontSize: 20, fontWeight: '800', color: Palette.purple, marginBottom: 12, letterSpacing: -0.3 },
-  loading: { color: Palette.muted, fontWeight: '600', marginBottom: 10 },
+  heroTitle: { flex: 1, fontSize: 19, fontWeight: '800', color: Palette.purpleDeep, lineHeight: 26, letterSpacing: -0.3 },
+  sectionTitle: { fontSize: 20, fontWeight: '800', color: Palette.purpleDeep, marginBottom: 12, letterSpacing: -0.3 },
+  loading: { color: Palette.mutedStrong, fontWeight: '600', marginBottom: 10 },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -143,7 +145,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     ...(Shadows.card ?? {}),
   },
-  cardTitle: { fontSize: 15, fontWeight: '800', color: Palette.purple, letterSpacing: -0.2, lineHeight: 20 },
+  cardTitle: { fontSize: 15, fontWeight: '800', color: Palette.purpleDeep, letterSpacing: -0.2, lineHeight: 20 },
   cardIcon: {
     width: 54,
     height: 54,
@@ -153,7 +155,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   meta: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 6 },
-  metaText: { fontSize: 12, fontWeight: '600', color: Palette.muted },
+  metaText: { fontSize: 12, fontWeight: '600', color: Palette.mutedStrong },
   play: {
     width: 42,
     height: 42,
@@ -162,5 +164,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  empty: { color: Palette.muted, fontWeight: '600', textAlign: 'center', marginTop: 20 },
+  empty: { color: Palette.mutedStrong, fontWeight: '600', textAlign: 'center', marginTop: 20 },
 });

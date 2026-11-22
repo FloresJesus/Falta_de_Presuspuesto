@@ -30,6 +30,8 @@ export const Palette = {
   surface: '#FFFFFF',
   ink: '#4E1D71',
   muted: '#8A7B93',
+  /** Texto secundario con contraste suficiente sobre fondos claros. */
+  mutedStrong: '#6E5C7B',
   border: '#F0E6F3',
   success: '#2EBF70',
   successSoft: '#DDF5E9',

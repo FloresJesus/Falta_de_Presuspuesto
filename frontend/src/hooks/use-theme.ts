@@ -4,11 +4,13 @@
  */
 
 import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
+/**
+ * LÍA está diseñada únicamente en modo claro (`userInterfaceStyle: "light"`
+ * en app.json). En web el esquema del sistema no se respeta igual que en
+ * nativo, por lo que usamos siempre la paleta clara: así las tarjetas y
+ * textos mantienen el contraste de la marca en cualquier dispositivo.
+ */
 export function useTheme() {
-  const scheme = useColorScheme();
-  const theme = scheme === 'dark' ? 'dark' : 'light';
-
-  return Colors[theme];
+  return Colors.light;
 }

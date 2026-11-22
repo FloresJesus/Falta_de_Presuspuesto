@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
   },
   category: { color: Palette.purple, fontSize: 11, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' },
   title: { fontSize: 26, fontWeight: '800', color: Palette.ink, marginTop: 8, letterSpacing: -0.5, lineHeight: 32 },
-  resumen: { color: Palette.muted, fontSize: 14, fontWeight: '600', marginTop: 10, lineHeight: 21 },
+  resumen: { color: Palette.mutedStrong, fontSize: 14, fontWeight: '600', marginTop: 10, lineHeight: 21 },
   metaRow: { flexDirection: 'row', gap: 8, marginTop: 14, flexWrap: 'wrap' },
   metaChip: {
     flexDirection: 'row',
