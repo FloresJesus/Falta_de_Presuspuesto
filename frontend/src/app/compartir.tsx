@@ -68,7 +68,7 @@ export default function CompartirScreen() {
                   <Avatar name={c.nombre} size={42} />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.contactName}>{c.nombre}</Text>
-                    <Text style={styles.contactMeta}>{c.telefono}</Text>
+                    <Text style={styles.contactMeta}>{c.telefono ?? c.correo ?? 'Sin teléfono'}</Text>
                   </View>
                   <View style={[styles.radio, selected && styles.radioOn]}>
                     {selected ? <Ionicons name="checkmark" size={14} color={Palette.surface} /> : null}

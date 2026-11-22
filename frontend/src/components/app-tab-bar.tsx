@@ -3,6 +3,7 @@ import { Text } from '@/components/text';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useSolicitudes } from '@/hooks/useSolicitudes';
 import { Palette, Shadows } from '@/constants/theme';
 
 const META: Record<
@@ -17,6 +18,7 @@ const META: Record<
 
 export function AppTabBar({ state, emitter, navigateToTab, navigation }: any) {
   const insets = useSafeAreaInsets();
+  const { pendientesEntrantes } = useSolicitudes();
 
   function irA(route: any, focused: boolean) {
     if (emitter && navigateToTab) {
@@ -40,7 +42,16 @@ export function AppTabBar({ state, emitter, navigateToTab, navigation }: any) {
             key={route.key}
             onPress={() => irA(route, focused)}
             style={({ pressed }) => [styles.item, pressed && { opacity: 0.7 }]}>
-            <Ionicons name={focused ? meta.active : meta.inactive} size={24} color={focused ? Palette.pink : Palette.muted} />
+            <View style={styles.iconWrap}>
+              <Ionicons name={focused ? meta.active : meta.inactive} size={24} color={focused ? Palette.pink : Palette.muted} />
+              {route.name === 'inicio' && pendientesEntrantes > 0 ? (
+                <View style={styles.tabBadge}>
+                  <Text style={styles.tabBadgeText}>
+                    {pendientesEntrantes > 9 ? '9+' : pendientesEntrantes}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
             <Text style={[styles.label, focused && styles.labelActive]}>{meta.label}</Text>
           </Pressable>
         );
@@ -65,6 +76,20 @@ const styles = StyleSheet.create({
     ...(Shadows.floating ?? {}),
   },
   item: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3, paddingVertical: 3 },
+  iconWrap: { position: 'relative' },
+  tabBadge: {
+    position: 'absolute',
+    top: -6,
+    right: -10,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: Palette.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+  },
+  tabBadgeText: { color: Palette.surface, fontSize: 9, fontWeight: '800' },
   label: { fontSize: 10.5, fontWeight: '600', color: Palette.muted },
   labelActive: { color: Palette.pink, fontWeight: '700' },
 });

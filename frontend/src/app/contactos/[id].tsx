@@ -1,25 +1,39 @@
-import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { Text } from '@/components/text';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import { Button, Card, Toggle } from '@/components/ui';
 import { useContactos } from '@/hooks/useContactos';
+import { confirmar } from '@/lib/utils';
 import { Palette, Radius, Shadows } from '@/constants/theme';
 
 export default function ContactoDetalleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { contactos, actualizar, eliminar } = useContactos();
+  const { contactos, loading, actualizar, eliminar } = useContactos();
   const contacto = contactos.find((c) => c.id === id);
 
-  const [nombre, setNombre] = useState(contacto?.nombre ?? '');
-  const [telefono, setTelefono] = useState(contacto?.telefono ?? '');
-  const [correo, setCorreo] = useState(contacto?.correo ?? '');
-  const [relacion, setRelacion] = useState(contacto?.relacion ?? '');
-  const [esPrincipal, setEsPrincipal] = useState(Boolean(contacto?.es_principal));
+  const [nombre, setNombre] = useState('');
+  const [telefono, setTelefono] = useState('');
+  const [correo, setCorreo] = useState('');
+  const [relacion, setRelacion] = useState('');
+  const [esPrincipal, setEsPrincipal] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const hidratado = useRef<string | null>(null);
+
+  // Los contactos llegan de forma asíncrona: recién entonces llenamos el
+  // formulario (si no, los campos quedarían vacíos al abrir la pantalla).
+  useEffect(() => {
+    if (!contacto || hidratado.current === contacto.id) return;
+    hidratado.current = contacto.id;
+    setNombre(contacto.nombre);
+    setTelefono(contacto.telefono ?? '');
+    setCorreo(contacto.correo ?? '');
+    setRelacion(contacto.relacion ?? '');
+    setEsPrincipal(Boolean(contacto.es_principal));
+  }, [contacto]);
 
   async function handleSave() {
     setError(null);
@@ -34,12 +48,29 @@ export default function ContactoDetalleScreen() {
     router.back();
   }
 
-  async function handleDelete() {
+  function handleDelete() {
     if (!contacto) return;
-    Alert.alert('Eliminar contacto', `¿Seguro que quieres eliminar a ${contacto.nombre}?`, [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Eliminar', style: 'destructive', onPress: () => void eliminar(contacto.id) },
-    ]);
+    confirmar({
+      titulo: 'Eliminar contacto',
+      mensaje: `¿Seguro que quieres eliminar a ${contacto.nombre}?`,
+      onConfirmar: async () => {
+        const res = await eliminar(contacto.id);
+        if (res.error) {
+          setError(res.error);
+          return;
+        }
+        router.back();
+      },
+    });
+  }
+
+  if (loading && !contacto) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator color={Palette.purple} />
+        <Text style={styles.subtitle}>Cargando contacto...</Text>
+      </View>
+    );
   }
 
   if (!contacto) {
@@ -108,6 +139,7 @@ function Field({
 
 const styles = StyleSheet.create({
   container: { flexGrow: 1, backgroundColor: Palette.background, paddingHorizontal: 20, paddingTop: 16, paddingBottom: 32 },
+  center: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: 8 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
   iconBtn: {
     width: 44,

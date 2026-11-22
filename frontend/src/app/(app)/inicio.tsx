@@ -1,18 +1,27 @@
+import { useCallback } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from '@/components/text';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import { Mascot, MascotAvatar } from '@/components/ui';
 import { useContactos } from '@/hooks/useContactos';
 import { useSesion } from '@/hooks/useSesion';
 import { useAuth } from '@/context/AuthContext';
+import { useSolicitudes } from '@/hooks/useSolicitudes';
 import { Palette, Radius, Shadows } from '@/constants/theme';
 
 export default function InicioScreen() {
   const { profile } = useAuth();
   const { sesion, contacto } = useSesion();
   const { contactos } = useContactos();
+  const { pendientesEntrantes, cargar: cargarSolicitudes } = useSolicitudes();
+
+  useFocusEffect(
+    useCallback(() => {
+      void cargarSolicitudes();
+    }, [cargarSolicitudes]),
+  );
 
   const nombre = profile?.nombre ?? 'María';
   const primer = nombre.trim().split(/\s+/)[0] || 'María';
@@ -27,10 +36,36 @@ export default function InicioScreen() {
           <Text style={styles.hello}>Hola, {primer}</Text>
           <Ionicons name="heart" size={22} color={Palette.pink} />
         </View>
-        <Pressable onPress={() => router.push('/ajustes')} style={({ pressed }) => [styles.bell, pressed && { opacity: 0.75 }]}>
+        <Pressable
+          onPress={() => router.push('/contactos/solicitudes')}
+          style={({ pressed }) => [styles.bell, pressed && { opacity: 0.75 }]}>
           <Ionicons name="notifications-outline" size={20} color={Palette.purple} />
+          {pendientesEntrantes > 0 ? (
+            <View style={styles.bellBadge}>
+              <Text style={styles.bellBadgeText}>
+                {pendientesEntrantes > 9 ? '9+' : pendientesEntrantes}
+              </Text>
+            </View>
+          ) : null}
         </Pressable>
       </View>
+
+      {pendientesEntrantes > 0 ? (
+        <Pressable
+          onPress={() => router.push('/contactos/solicitudes')}
+          style={({ pressed }) => [styles.solicitudesBanner, pressed && { opacity: 0.94 }]}>
+          <Ionicons name="mail-unread-outline" size={22} color={Palette.purple} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.bannerTitle}>
+              {pendientesEntrantes === 1
+                ? 'Tienes 1 solicitud de contacto'
+                : `Tienes ${pendientesEntrantes} solicitudes de contacto`}
+            </Text>
+            <Text style={styles.bannerText}>Ábrela para aceptarla o rechazarla.</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={Palette.purple} />
+        </Pressable>
+      ) : null}
 
       <Pressable onPress={() => router.push('/mapa')} style={({ pressed }) => [styles.statusCard, pressed && { opacity: 0.94 }]}>
         <View style={styles.statusIcon}>
@@ -101,8 +136,33 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.surface,
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
     ...(Shadows.card ?? {}),
   },
+  bellBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: Palette.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  bellBadgeText: { color: Palette.surface, fontSize: 10, fontWeight: '800' },
+  solicitudesBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: Palette.lilac,
+    borderRadius: Radius.xl,
+    padding: 12,
+    marginBottom: 10,
+  },
+  bannerTitle: { fontSize: 14, fontWeight: '800', color: Palette.purple },
+  bannerText: { fontSize: 12, fontWeight: '600', color: Palette.muted, marginTop: 2 },
   statusCard: {
     flexDirection: 'row',
     alignItems: 'center',

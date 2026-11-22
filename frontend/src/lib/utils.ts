@@ -1,5 +1,35 @@
+import { Alert, Platform } from 'react-native';
+
 export const SOS_DEMO_MENSAJE = 'Alerta SOS de prueba enviada desde LÍA';
 export const EMERGENCIA_NUMERO = '110';
+
+/**
+ * Confirmación de acciones destructivas. En web `Alert.alert` no está
+ * implementado por react-native-web, así que usamos el diálogo del navegador.
+ */
+export function confirmar({
+  titulo,
+  mensaje,
+  textoConfirmar = 'Eliminar',
+  onConfirmar,
+}: {
+  titulo: string;
+  mensaje: string;
+  textoConfirmar?: string;
+  onConfirmar: () => void;
+}) {
+  if (Platform.OS === 'web') {
+    if (typeof window !== 'undefined' && window.confirm(`${titulo}\n\n${mensaje}`)) {
+      onConfirmar();
+    }
+    return;
+  }
+  Alert.alert(titulo, mensaje, [
+    { text: 'Cancelar', style: 'cancel' },
+    { text: textoConfirmar, style: 'destructive', onPress: onConfirmar },
+  ]);
+}
+
 
 export function iniciales(nombre: string): string {
   const parts = nombre

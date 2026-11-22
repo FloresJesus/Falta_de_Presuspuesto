@@ -4,6 +4,8 @@ export type EstadoAlerta = 'enviada' | 'vista' | 'atendida' | 'cancelada';
 
 export type EstadoSesion = 'activa' | 'finalizada' | 'cancelada';
 
+export type EstadoSolicitudContacto = 'pendiente' | 'aceptada' | 'rechazada' | 'cancelada';
+
 export type CategoriaInstitucion = 'legal' | 'psicologica' | 'salud' | 'proteccion';
 
 export type TipoContenido = 'articulo' | 'infografia' | 'video';
@@ -24,13 +26,29 @@ export interface ContactoConfianza {
   id: string;
   usuaria_id: string;
   nombre: string;
-  telefono: string;
+  telefono: string | null;
   correo: string | null;
   relacion: string | null;
   es_principal: boolean;
   activo: boolean;
   creado_en: string;
   actualizado_en: string;
+}
+
+export interface SolicitudContacto {
+  id: string;
+  solicitante_id: string;
+  destinatario_id: string;
+  nombre_solicitante: string;
+  correo_solicitante: string | null;
+  telefono_solicitante: string | null;
+  nombre_destinatario: string;
+  correo_destinatario: string | null;
+  telefono_destinatario: string | null;
+  relacion: string | null;
+  estado: EstadoSolicitudContacto;
+  creado_en: string;
+  respondido_en: string | null;
 }
 
 export interface SesionAcompañamiento {
