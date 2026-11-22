@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "LÍA",
+    "name": "MASI",
     "slug": "lia",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -9,8 +9,8 @@
     "userInterfaceStyle": "light",
     "ios": {
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "LÍA usa tu ubicación para compartir el acompañamiento con tu contacto de confianza.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "LÍA necesita tu ubicación aunque la app esté en segundo plano para que tu contacto pueda encontrarte durante una emergencia."
+        "NSLocationWhenInUseUsageDescription": "MASI usa tu ubicación para compartir el acompañamiento con tu contacto de confianza.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "MASI necesita tu ubicación aunque la app esté en segundo plano para que tu contacto pueda encontrarte durante una emergencia."
       }
     },
     "android": {

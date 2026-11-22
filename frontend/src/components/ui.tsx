@@ -570,7 +570,7 @@ const CONTACT_SOURCES = [
   require('@/assets/images/masi/contact-3.png'),
 ];
 
-/** Avatar circular de la mascota MÁSi (incluye anillo blanco). */
+/** Avatar circular de la mascota MASI (incluye anillo blanco). */
 export function MascotAvatar({ size = 48, variant, style }: { size?: number; variant?: number; style?: any }) {
   const source = variant == null ? require('@/assets/images/masi/avatar.png') : CONTACT_SOURCES[((variant % 4) + 4) % 4];
   return (
@@ -598,7 +598,7 @@ export function Mascot({ height = 120, style }: { height?: number; style?: any }
   );
 }
 
-/** Logotipo MÁSi completo (M + pin + !Si + ondas). */
+/** Logotipo MASI completo (M + pin + !Si + ondas). */
 export function BrandLogo({ width = 200, style }: { width?: number; style?: any }) {
   const height = (width * 694) / 598;
   return (

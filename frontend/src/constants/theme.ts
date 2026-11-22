@@ -1,5 +1,5 @@
 /**
- * Tema de marca de LÍA / MÁSi.
+ * Tema de marca de MASI.
  *
  * Paleta base solicitada:
  *   - #55147C  morado principal
