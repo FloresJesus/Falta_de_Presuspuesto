@@ -5,6 +5,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import { Mascot, MascotAvatar } from '@/components/ui';
+import { CarruselDesaparecidas } from '@/components/carrusel-desaparecidas';
 import { useContactos } from '@/hooks/useContactos';
 import { useSesion } from '@/hooks/useSesion';
 import { useAuth } from '@/context/AuthContext';
@@ -101,6 +102,8 @@ export default function InicioScreen() {
           </Pressable>
         </View>
       ) : null}
+
+      <CarruselDesaparecidas />
 
       <Pressable onPress={() => router.push('/mapa')} style={({ pressed }) => [styles.statusCard, pressed && { opacity: 0.94 }]}>
         <View style={styles.statusIcon}>

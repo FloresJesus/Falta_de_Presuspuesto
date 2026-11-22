@@ -81,6 +81,21 @@ export interface AlertaSOS {
   contacto?: ContactoConfianza | null;
 }
 
+export interface PersonaDesaparecida {
+  id: string;
+  nombre: string;
+  edad: number | null;
+  descripcion: string | null;
+  foto_url: string | null;
+  lugar: string;
+  latitud: number | null;
+  longitud: number | null;
+  fecha_desaparicion: string;
+  estado: 'desaparecida' | 'encontrada';
+  contacto_familiar: string | null;
+  creado_en: string;
+}
+
 export interface ZonaPeligro {
   id: string;
   nombre: string;
