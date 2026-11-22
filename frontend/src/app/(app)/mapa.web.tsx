@@ -11,7 +11,7 @@ import { Palette, Radius } from '@/constants/theme';
 export default function MapaWebScreen() {
   const { profile } = useAuth();
   const { zonas, crear, desactivar } = useZonasPeligro();
-  const [form, setForm] = useState({ nombre: '', latitud: '-17.7833', longitud: '-67.1333', indice: '3' });
+  const [form, setForm] = useState({ nombre: '', latitud: '-17.9696', longitud: '-67.1147', indice: '3' });
   const [error, setError] = useState<string | null>(null);
   const esAdmin = profile?.rol === 'admin';
 
@@ -33,7 +33,7 @@ export default function MapaWebScreen() {
     <ScrollView contentContainerStyle={styles.root}>
       <Text style={styles.titulo}>Mapa de Oruro</Text>
       <View style={styles.mapa}>
-        <MapCanvas latitude={-17.7833} longitude={-67.1333} status="idle" markers />
+        <MapCanvas latitude={-17.9696} longitude={-67.1147} status="idle" markers />
       </View>
 
       <Text style={styles.seccion}>Zonas registradas ({zonas.length})</Text>

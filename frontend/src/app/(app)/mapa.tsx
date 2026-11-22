@@ -14,7 +14,7 @@ import { useZonasPeligro } from '@/hooks/useZonasPeligro';
 import type { ZonaPeligro } from '@/lib/types';
 import { Palette, Radius, Shadows } from '@/constants/theme';
 
-const ORURO = { latitude: -17.7833, longitude: -67.1333, latitudeDelta: 0.09, longitudeDelta: 0.09 };
+const ORURO = { latitude: -17.9696, longitude: -67.1147, latitudeDelta: 0.06, longitudeDelta: 0.06 };
 
 export default function MapaScreen() {
   const { profile } = useAuth();
